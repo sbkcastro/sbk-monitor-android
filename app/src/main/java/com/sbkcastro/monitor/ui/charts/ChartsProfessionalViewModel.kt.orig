@@ -103,9 +103,9 @@ class ChartsProfessionalViewModel(application: Application) : AndroidViewModel(a
                 val apiService = ApiClient.getService()
                 val response = apiService.getMetrics()
 
-                val cpu = response.cpu.usage.toFloat()
-                val ram = response.memory.usagePercent.toFloat()
-                val disk = response.disk.usagePercent.toFloat()
+                val cpu = response.cpu.usage
+                val ram = response.memory.usagePercent
+                val disk = parseDiskUsage(response.disk.usagePercent)
 
                 addMetric(cpu, ram, disk)
                 saveMetrics()
