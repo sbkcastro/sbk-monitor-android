@@ -31,11 +31,35 @@ class ServerWidgetProvider : AppWidgetProvider() {
     private fun updateWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
         val views = RemoteViews(context.packageName, R.layout.widget_server)
 
-        val prefs = context.getSharedPreferences("widget_data", Context.MODE_PRIVATE)
-        views.setTextViewText(R.id.widgetCpu, "CPU: ${prefs.getString("cpu", "--")}%")
-        views.setTextViewText(R.id.widgetRam, "RAM: ${prefs.getString("ram", "--")}%")
-        views.setTextViewText(R.id.widgetDisk, "Disk: ${prefs.getString("disk", "--")}%")
-        views.setTextViewText(R.id.widgetStatus, prefs.getString("status", "SBK Monitor"))
+        // Leer desde charts_data en lugar de widget_data
+        val prefs = context.getSharedPreferences("charts_data", Context.MODE_PRIVATE)
+        val metricsJson = prefs.getString("metrics_data", null)
+
+        if (metricsJson != null) {
+            try {
+                val json = org.json.JSONObject(metricsJson)
+                val metricsArray = json.getJSONArray("metrics")
+
+                if (metricsArray.length() > 0) {
+                    // Obtener último punto de datos
+                    val lastMetric = metricsArray.getJSONObject(metricsArray.length() - 1)
+                    val cpu = String.format("%.1f", lastMetric.getDouble("cpu"))
+                    val ram = String.format("%.1f", lastMetric.getDouble("ram"))
+                    val disk = String.format("%.1f", lastMetric.getDouble("disk"))
+
+                    views.setTextViewText(R.id.widgetCpu, "⚡ CPU: $cpu%")
+                    views.setTextViewText(R.id.widgetRam, "🧠 RAM: $ram%")
+                    views.setTextViewText(R.id.widgetDisk, "💾 Disco: $disk%")
+                    views.setTextViewText(R.id.widgetStatus, "✅ Actualizado")
+                } else {
+                    setDefaultValues(views)
+                }
+            } catch (e: Exception) {
+                setDefaultValues(views)
+            }
+        } else {
+            setDefaultValues(views)
+        }
 
         val intent = Intent(context, LoginActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(context, 0, intent,
@@ -43,6 +67,13 @@ class ServerWidgetProvider : AppWidgetProvider() {
         views.setOnClickPendingIntent(R.id.widgetRoot, pendingIntent)
 
         appWidgetManager.updateAppWidget(appWidgetId, views)
+    }
+
+    private fun setDefaultValues(views: RemoteViews) {
+        views.setTextViewText(R.id.widgetCpu, "⚡ CPU: --%")
+        views.setTextViewText(R.id.widgetRam, "🧠 RAM: --%")
+        views.setTextViewText(R.id.widgetDisk, "💾 Disco: --%")
+        views.setTextViewText(R.id.widgetStatus, "Iniciando...")
     }
 
     private fun scheduleUpdates(context: Context) {

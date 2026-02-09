@@ -36,6 +36,11 @@ class ChartsProfessionalFragment : Fragment() {
         setupTimeRangeSelector()
         observeData()
 
+        // Botón actualizar
+        binding.fabRefresh.setOnClickListener {
+            viewModel.fetchRealMetrics()
+        }
+
         // Fetch inicial de métricas reales
         viewModel.fetchRealMetrics()
     }

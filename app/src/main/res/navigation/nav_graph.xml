@@ -28,4 +28,9 @@
         android:id="@+id/chartsProfessionalFragment"
         android:name="com.sbkcastro.monitor.ui.charts.ChartsProfessionalFragment"
         android:label="Gráficos"/>
+
+    <fragment
+        android:id="@+id/servicesFragment"
+        android:name="com.sbkcastro.monitor.ui.services.ServicesFragment"
+        android:label="Servicios"/>
 </navigation>

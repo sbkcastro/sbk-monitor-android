@@ -5,9 +5,9 @@
         android:icon="@android:drawable/ic_menu_compass"
         android:title="Gráficos"/>
     <item
-        android:id="@+id/containersFragment"
-        android:icon="@android:drawable/ic_menu_manage"
-        android:title="@string/containers"/>
+        android:id="@+id/servicesFragment"
+        android:icon="@android:drawable/ic_menu_view"
+        android:title="Servicios"/>
     <item
         android:id="@+id/chatFragment"
         android:icon="@android:drawable/ic_menu_send"
