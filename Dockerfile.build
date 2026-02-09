@@ -1,0 +1,20 @@
+FROM eclipse-temurin:17-jdk
+
+ENV ANDROID_SDK_ROOT=/opt/android-sdk
+ENV PATH="${PATH}:${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin:${ANDROID_SDK_ROOT}/platform-tools"
+
+# Install Android command line tools
+RUN apt-get update && apt-get install -y wget unzip && \
+    mkdir -p ${ANDROID_SDK_ROOT}/cmdline-tools && \
+    cd /tmp && \
+    wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdtools.zip && \
+    unzip -q cmdtools.zip && \
+    mv cmdline-tools ${ANDROID_SDK_ROOT}/cmdline-tools/latest && \
+    rm cmdtools.zip && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Accept licenses and install SDK components
+RUN yes | sdkmanager --licenses > /dev/null 2>&1 && \
+    sdkmanager "platforms;android-34" "build-tools;34.0.0" "platform-tools"
+
+WORKDIR /project

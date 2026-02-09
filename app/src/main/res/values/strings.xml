@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">SBK Monitor</string>
+    <string name="dashboard">Dashboard</string>
+    <string name="containers">Containers</string>
+    <string name="chat">Chat</string>
+    <string name="settings">Ajustes</string>
+</resources>

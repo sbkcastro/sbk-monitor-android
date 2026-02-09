@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widgetRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="12dp"
+    android:background="#DD1A1A2E">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="SBK Monitor"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:textColor="#BB86FC"/>
+
+    <TextView
+        android:id="@+id/widgetCpu"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="CPU: --%"
+        android:textSize="13sp"
+        android:textColor="#E0E0E0"
+        android:layout_marginTop="4dp"/>
+
+    <TextView
+        android:id="@+id/widgetRam"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="RAM: --%"
+        android:textSize="13sp"
+        android:textColor="#E0E0E0"/>
+
+    <TextView
+        android:id="@+id/widgetDisk"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Disk: --%"
+        android:textSize="13sp"
+        android:textColor="#E0E0E0"/>
+
+    <TextView
+        android:id="@+id/widgetStatus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="--"
+        android:textSize="11sp"
+        android:textColor="#03DAC5"
+        android:layout_marginTop="4dp"/>
+</LinearLayout>

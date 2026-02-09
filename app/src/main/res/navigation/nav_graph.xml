@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/dashboardFragment">
+
+    <fragment
+        android:id="@+id/dashboardFragment"
+        android:name="com.sbkcastro.monitor.ui.dashboard.DashboardFragment"
+        android:label="@string/dashboard"/>
+
+    <fragment
+        android:id="@+id/containersFragment"
+        android:name="com.sbkcastro.monitor.ui.containers.ContainersFragment"
+        android:label="@string/containers"/>
+
+    <fragment
+        android:id="@+id/chatFragment"
+        android:name="com.sbkcastro.monitor.ui.chat.ChatFragment"
+        android:label="@string/chat"/>
+
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.sbkcastro.monitor.ui.settings.SettingsFragment"
+        android:label="@string/settings"/>
+</navigation>
