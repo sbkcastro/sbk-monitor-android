@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import com.sbkcastro.monitor.BuildConfig
 import com.sbkcastro.monitor.LoginActivity
 import com.sbkcastro.monitor.api.ApiClient
 import com.sbkcastro.monitor.databinding.FragmentSettingsBinding
@@ -23,7 +24,7 @@ class SettingsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.versionText.text = "SBK Monitor v1.0.0"
+        binding.versionText.text = "SBK Monitor v${BuildConfig.VERSION_NAME}"
         binding.serverText.text = "Conectado al servidor"
 
         binding.btnLogout.setOnClickListener {
