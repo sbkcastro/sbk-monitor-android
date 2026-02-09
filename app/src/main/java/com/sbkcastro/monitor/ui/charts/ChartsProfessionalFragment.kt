@@ -35,6 +35,9 @@ class ChartsProfessionalFragment : Fragment() {
         setupCharts()
         setupTimeRangeSelector()
         observeData()
+
+        // Cargar datos de muestra para testing
+        viewModel.loadSampleData()
     }
 
     private fun setupCharts() {

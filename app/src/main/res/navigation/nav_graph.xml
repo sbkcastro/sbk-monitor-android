@@ -2,7 +2,7 @@
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/dashboardFragment">
+    app:startDestination="@id/chartsProfessionalFragment">
 
     <fragment
         android:id="@+id/dashboardFragment"
@@ -23,4 +23,9 @@
         android:id="@+id/settingsFragment"
         android:name="com.sbkcastro.monitor.ui.settings.SettingsFragment"
         android:label="@string/settings"/>
+
+    <fragment
+        android:id="@+id/chartsProfessionalFragment"
+        android:name="com.sbkcastro.monitor.ui.charts.ChartsProfessionalFragment"
+        android:label="Gráficos"/>
 </navigation>

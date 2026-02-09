@@ -31,8 +31,7 @@ android {
         jvmTarget = "17"
     }
 
-    buildFeatures {
-        buildConfig = true
+    buildFeatures {\n        buildConfig = true
         viewBinding = true
     }
 }
