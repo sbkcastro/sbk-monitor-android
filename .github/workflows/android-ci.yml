@@ -36,9 +36,7 @@ jobs:
 
       - name: 📱 Setup Android SDK
         uses: android-actions/setup-android@v3
-        with:
-          api-level: ${{ env.ANDROID_API_LEVEL }}
-          build-tools: ${{ env.ANDROID_BUILD_TOOLS }}
+        # Gradle descargará automáticamente el SDK necesario
 
       - name: 🔑 Decode Keystore
         id: decode_keystore
