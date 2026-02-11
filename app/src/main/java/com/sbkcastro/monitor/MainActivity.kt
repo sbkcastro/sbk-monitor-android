@@ -35,9 +35,7 @@ class MainActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.action_logout -> {
-                ApiClient.clearToken()
-                val prefs = getSharedPreferences("sbk_secure_prefs", MODE_PRIVATE)
-                prefs.edit().remove("auth_token").apply()
+                ApiClient.clearAuth()
                 startActivity(Intent(this, LoginActivity::class.java))
                 finish()
                 true

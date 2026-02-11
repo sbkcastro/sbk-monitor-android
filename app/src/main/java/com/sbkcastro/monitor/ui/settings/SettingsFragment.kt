@@ -28,7 +28,7 @@ class SettingsFragment : Fragment() {
         binding.serverText.text = "Conectado al servidor"
 
         binding.btnLogout.setOnClickListener {
-            ApiClient.clearToken()
+            ApiClient.clearAuth()
             startActivity(Intent(requireContext(), LoginActivity::class.java))
             requireActivity().finish()
         }

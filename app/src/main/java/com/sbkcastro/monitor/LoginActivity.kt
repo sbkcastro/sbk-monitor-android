@@ -34,12 +34,10 @@ class LoginActivity : AppCompatActivity() {
         )
 
         val savedUrl = securePrefs.getString("server_url", "") ?: ""
-        val savedToken = securePrefs.getString("auth_token", "") ?: ""
         binding.editServerUrl.setText(savedUrl)
 
-        if (savedUrl.isNotEmpty() && savedToken.isNotEmpty()) {
-            ApiClient.initialize(savedUrl)
-            ApiClient.setToken(savedToken)
+        if (savedUrl.isNotEmpty()) {
+            ApiClient.initialize(this, savedUrl)
             tryAutoLogin()
         }
 
@@ -76,16 +74,22 @@ class LoginActivity : AppCompatActivity() {
         binding.btnLogin.isEnabled = false
         binding.progressBar.visibility = View.VISIBLE
 
-        ApiClient.initialize(serverUrl)
+        ApiClient.initialize(this, serverUrl)
 
         lifecycleScope.launch {
             try {
-                val response = ApiClient.getService().login(LoginRequest(password))
-                ApiClient.setToken(response.token)
+                val response = ApiClient.getServiceWithoutInterceptor().login(LoginRequest(password))
 
+                // Guardar credenciales en AuthInterceptor para auto-renovación
+                ApiClient.getAuthInterceptor()?.saveLoginCredentials(
+                    token = response.token,
+                    expiresIn = response.expiresIn,
+                    password = password
+                )
+
+                // Guardar solo la URL en prefs locales
                 securePrefs.edit()
                     .putString("server_url", serverUrl)
-                    .putString("auth_token", response.token)
                     .apply()
 
                 goToMain()

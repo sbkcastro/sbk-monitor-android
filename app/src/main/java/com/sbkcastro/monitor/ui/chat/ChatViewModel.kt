@@ -41,7 +41,12 @@ class ChatViewModel : ViewModel() {
                 _messages.value = updatedList
             } catch (e: Exception) {
                 val updatedList = _messages.value?.toMutableList() ?: mutableListOf()
-                updatedList.add(ChatMessage("assistant", "Error: ${e.message}", currentBackend, System.currentTimeMillis()))
+                val errorMsg = if (e.message?.contains("401") == true) {
+                    "Error 401: Token expirado. Ve a Config → Cerrar sesión y vuelve a iniciar sesión."
+                } else {
+                    "Error: ${e.message}"
+                }
+                updatedList.add(ChatMessage("assistant", errorMsg, currentBackend, System.currentTimeMillis()))
                 _messages.value = updatedList
             } finally {
                 _sending.value = false

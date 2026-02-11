@@ -26,8 +26,13 @@ class ChartsProfessionalViewModel(application: Application) : AndroidViewModel(a
         // Cargar historial guardado
         loadStoredMetrics()
 
-        // Iniciar actualización automática cada 5 minutos
+        // Iniciar actualización automática cada 10 minutos
         startAutoUpdate()
+
+        // Fetch inmediato al iniciar
+        viewModelScope.launch {
+            fetchRealMetrics()
+        }
     }
 
     fun setTimeRange(range: TimeRange) {
@@ -92,7 +97,7 @@ class ChartsProfessionalViewModel(application: Application) : AndroidViewModel(a
         viewModelScope.launch {
             while (true) {
                 fetchRealMetrics()
-                delay(5 * 60 * 1000) // 5 minutos
+                delay(10 * 60 * 1000) // 10 minutos
             }
         }
     }
@@ -110,10 +115,10 @@ class ChartsProfessionalViewModel(application: Application) : AndroidViewModel(a
                 addMetric(cpu, ram, disk)
                 saveMetrics()
             } catch (e: Exception) {
-                // Si falla, usar loadSampleData como fallback
-                if (_allMetrics.value.isNullOrEmpty()) {
-                    loadSampleData()
-                }
+                // NO USAR DATOS SIMULADOS - Solo mostrar error
+                android.util.Log.e("ChartsProfessional", "Error fetching metrics: ${e.message}", e)
+                // Si el error es 401, el usuario necesita hacer login
+                // NO cargamos datos fake
             }
         }
     }

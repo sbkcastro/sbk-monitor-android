@@ -1,6 +1,6 @@
 package com.sbkcastro.monitor.api
 
-import okhttp3.Interceptor
+import android.content.Context
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -14,37 +14,23 @@ import javax.net.ssl.X509TrustManager
 
 object ApiClient {
     private var retrofit: Retrofit? = null
-    private var token: String? = null
+    private var retrofitWithoutAuth: Retrofit? = null
+    private var authInterceptor: AuthInterceptor? = null
     private var baseUrl: String = ""
+    private var appContext: Context? = null
 
-    fun setToken(newToken: String) {
-        token = newToken
-    }
-
-    fun getToken(): String? = token
-
-    fun clearToken() {
-        token = null
-    }
-
-    fun initialize(serverUrl: String) {
+    fun initialize(context: Context, serverUrl: String) {
+        appContext = context.applicationContext
         baseUrl = if (serverUrl.endsWith("/")) serverUrl else "$serverUrl/"
+        authInterceptor = AuthInterceptor(appContext!!)
         retrofit = null
+        retrofitWithoutAuth = null
     }
+
+    fun getAuthInterceptor(): AuthInterceptor? = authInterceptor
 
     fun getService(): ApiService {
         if (retrofit == null) {
-            val authInterceptor = Interceptor { chain ->
-                val request = if (token != null) {
-                    chain.request().newBuilder()
-                        .addHeader("Authorization", "Bearer $token")
-                        .build()
-                } else {
-                    chain.request()
-                }
-                chain.proceed(request)
-            }
-
             val logging = HttpLoggingInterceptor().apply {
                 level = HttpLoggingInterceptor.Level.BODY
             }
@@ -59,7 +45,7 @@ object ApiClient {
             sslContext.init(null, trustAllCerts, SecureRandom())
 
             val client = OkHttpClient.Builder()
-                .addInterceptor(authInterceptor)
+                .addInterceptor(authInterceptor!!)
                 .addInterceptor(logging)
                 .sslSocketFactory(sslContext.socketFactory, trustAllCerts[0] as X509TrustManager)
                 .hostnameVerifier { _, _ -> true }
@@ -75,5 +61,42 @@ object ApiClient {
                 .build()
         }
         return retrofit!!.create(ApiService::class.java)
+    }
+
+    fun getServiceWithoutInterceptor(): ApiService {
+        if (retrofitWithoutAuth == null) {
+            val logging = HttpLoggingInterceptor().apply {
+                level = HttpLoggingInterceptor.Level.BODY
+            }
+
+            val trustAllCerts = arrayOf<TrustManager>(object : X509TrustManager {
+                override fun checkClientTrusted(chain: Array<X509Certificate>, authType: String) {}
+                override fun checkServerTrusted(chain: Array<X509Certificate>, authType: String) {}
+                override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
+            })
+
+            val sslContext = SSLContext.getInstance("TLS")
+            sslContext.init(null, trustAllCerts, SecureRandom())
+
+            val client = OkHttpClient.Builder()
+                .addInterceptor(logging)
+                .sslSocketFactory(sslContext.socketFactory, trustAllCerts[0] as X509TrustManager)
+                .hostnameVerifier { _, _ -> true }
+                .connectTimeout(15, TimeUnit.SECONDS)
+                .readTimeout(30, TimeUnit.SECONDS)
+                .writeTimeout(15, TimeUnit.SECONDS)
+                .build()
+
+            retrofitWithoutAuth = Retrofit.Builder()
+                .baseUrl(baseUrl)
+                .client(client)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build()
+        }
+        return retrofitWithoutAuth!!.create(ApiService::class.java)
+    }
+
+    fun clearAuth() {
+        authInterceptor?.clearAuth()
     }
 }

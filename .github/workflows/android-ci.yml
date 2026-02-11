@@ -1,0 +1,209 @@
+name: Android CI/CD
+
+on:
+  push:
+    branches: [ main, master, develop ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:  # Permite ejecución manual
+
+env:
+  # Forzar Java 17 para evitar problemas de compatibilidad
+  JAVA_VERSION: '17'
+  JAVA_DISTRIBUTION: 'temurin'
+  # Android SDK para Android 13 (API 33)
+  ANDROID_API_LEVEL: 33
+  ANDROID_BUILD_TOOLS: '33.0.0'
+
+jobs:
+  build:
+    name: Build & Sign APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history para git describe
+
+      - name: 🔧 Setup Java ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          cache: gradle
+
+      - name: 📱 Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          api-level: ${{ env.ANDROID_API_LEVEL }}
+          build-tools: ${{ env.ANDROID_BUILD_TOOLS }}
+
+      - name: 🔑 Decode Keystore
+        id: decode_keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > $GITHUB_WORKSPACE/sbk-monitor-release.jks
+          echo "✅ Keystore decoded successfully"
+          ls -lh sbk-monitor-release.jks
+        continue-on-error: false
+
+      - name: 📝 Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: 🧹 Clean build directory
+        run: ./gradlew clean
+        continue-on-error: true
+
+      - name: 🏗️ Build Release APK
+        id: build_apk
+        run: |
+          echo "🚀 Starting build..."
+          ./gradlew assembleRelease \
+            -Pandroid.injected.signing.store.file=$GITHUB_WORKSPACE/sbk-monitor-release.jks \
+            -Pandroid.injected.signing.store.password="${{ secrets.KEYSTORE_PASSWORD }}" \
+            -Pandroid.injected.signing.key.alias="${{ secrets.KEY_ALIAS }}" \
+            -Pandroid.injected.signing.key.password="${{ secrets.KEY_PASSWORD }}" \
+            --stacktrace --warning-mode all
+
+          if [ $? -eq 0 ]; then
+            echo "✅ Build successful"
+            echo "build_status=success" >> $GITHUB_OUTPUT
+          else
+            echo "❌ Build failed"
+            echo "build_status=failed" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+      - name: 🔍 List build outputs (debug)
+        if: always()
+        run: |
+          echo "📂 Build outputs:"
+          find app/build/outputs -type f -name "*.apk" || echo "No APK files found"
+          ls -lah app/build/outputs/apk/release/ || echo "Release directory not found"
+
+      - name: ✍️ Sign APK with apksigner
+        id: sign_apk
+        if: steps.build_apk.outputs.build_status == 'success'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y apksigner
+
+          APK_PATH="app/build/outputs/apk/release/app-release.apk"
+
+          if [ ! -f "$APK_PATH" ]; then
+            echo "❌ APK not found at $APK_PATH"
+            exit 1
+          fi
+
+          echo "🔏 Signing APK..."
+          apksigner sign \
+            --ks $GITHUB_WORKSPACE/sbk-monitor-release.jks \
+            --ks-pass pass:"${{ secrets.KEYSTORE_PASSWORD }}" \
+            --key-pass pass:"${{ secrets.KEY_PASSWORD }}" \
+            --ks-key-alias "${{ secrets.KEY_ALIAS }}" \
+            --out app/build/outputs/apk/release/sbk-monitor-signed.apk \
+            "$APK_PATH"
+
+          echo "✅ APK signed successfully"
+
+          echo "🔍 Verifying signature..."
+          apksigner verify --print-certs app/build/outputs/apk/release/sbk-monitor-signed.apk
+
+          if [ $? -eq 0 ]; then
+            echo "✅ Signature verification passed"
+            echo "sign_status=success" >> $GITHUB_OUTPUT
+          else
+            echo "❌ Signature verification failed"
+            echo "sign_status=failed" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+      - name: 📊 Extract version info
+        id: version
+        run: |
+          VERSION_NAME=$(grep "versionName" app/build.gradle.kts | cut -d'"' -f2)
+          VERSION_CODE=$(grep "versionCode" app/build.gradle.kts | awk '{print $3}')
+          GIT_SHA=$(git rev-parse --short HEAD)
+          BUILD_DATE=$(date +'%Y%m%d-%H%M%S')
+
+          echo "version_name=$VERSION_NAME" >> $GITHUB_OUTPUT
+          echo "version_code=$VERSION_CODE" >> $GITHUB_OUTPUT
+          echo "git_sha=$GIT_SHA" >> $GITHUB_OUTPUT
+          echo "build_date=$BUILD_DATE" >> $GITHUB_OUTPUT
+
+          echo "📦 Version: $VERSION_NAME (code: $VERSION_CODE)"
+          echo "🔖 Git SHA: $GIT_SHA"
+
+      - name: 📦 Rename APK
+        if: steps.sign_apk.outputs.sign_status == 'success'
+        run: |
+          VERSION="${{ steps.version.outputs.version_name }}"
+          BUILD_DATE="${{ steps.version.outputs.build_date }}"
+
+          mv app/build/outputs/apk/release/sbk-monitor-signed.apk \
+             app/build/outputs/apk/release/sbk-monitor-v${VERSION}-${BUILD_DATE}.apk
+
+          echo "✅ APK renamed to: sbk-monitor-v${VERSION}-${BUILD_DATE}.apk"
+
+      - name: 📤 Upload APK Artifact
+        if: steps.sign_apk.outputs.sign_status == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbk-monitor-v${{ steps.version.outputs.version_name }}
+          path: app/build/outputs/apk/release/*.apk
+          retention-days: 90
+
+      - name: 🚀 Create GitHub Release (on tag)
+        if: startsWith(github.ref, 'refs/tags/v') && steps.sign_apk.outputs.sign_status == 'success'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: app/build/outputs/apk/release/*.apk
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          body: |
+            ## 📱 SBK Monitor v${{ steps.version.outputs.version_name }}
+
+            **Build Info:**
+            - Version Code: ${{ steps.version.outputs.version_code }}
+            - Git SHA: ${{ steps.version.outputs.git_sha }}
+            - Build Date: ${{ steps.version.outputs.build_date }}
+
+            **Download:**
+            - ⬇️ [sbk-monitor-v${{ steps.version.outputs.version_name }}.apk](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/sbk-monitor-v${{ steps.version.outputs.version_name }}-${{ steps.version.outputs.build_date }}.apk)
+
+            **Installation:**
+            1. Download APK
+            2. Enable "Install from unknown sources"
+            3. Install APK
+            4. Login with server credentials
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🧹 Cleanup Keystore
+        if: always()
+        run: |
+          rm -f $GITHUB_WORKSPACE/sbk-monitor-release.jks
+          echo "✅ Keystore deleted from runner"
+
+      - name: ❌ Build Failed - Upload logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs-${{ steps.version.outputs.build_date }}
+          path: |
+            app/build/reports/
+            app/build/outputs/logs/
+          retention-days: 7
+
+      - name: 📧 Notify on failure
+        if: failure()
+        run: |
+          echo "::error::❌ Build/Sign failed for commit ${{ github.sha }}"
+          echo "::error::Check logs: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+          # Aquí puedes agregar notificación a Telegram si lo deseas
+          # curl -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+          #   -d chat_id="${TELEGRAM_CHAT_ID}" \
+          #   -d text="❌ Build failed: ${{ github.repository }} @ ${{ github.sha }}"

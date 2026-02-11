@@ -8,17 +8,27 @@ android {
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.sbkcastro.monitor"
+        applicationId = "com.sbkcastro.monitor.v2"
         minSdk = 26
         targetSdk = 34
-        versionCode = 3
-        versionName = "1.1.0"
+        versionCode = 10
+        versionName = "2.3.0"
+    }
+
+    signingConfigs {
+        create("release") {
+            storeFile = file("../sbk-monitor-release.jks")
+            storePassword = "android123"
+            keyAlias = "sbk-monitor"
+            keyPassword = "android123"
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 
@@ -34,6 +44,11 @@ android {
     buildFeatures {
         buildConfig = true
         viewBinding = true
+    }
+
+    lint {
+        baseline = file("lint-baseline.xml")
+        checkReleaseBuilds = false
     }
 }
 
