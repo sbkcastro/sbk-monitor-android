@@ -13,6 +13,17 @@ import java.util.concurrent.TimeUnit
 
 class ServerWidgetProvider : AppWidgetProvider() {
 
+    override fun onReceive(context: Context, intent: Intent) {
+        super.onReceive(context, intent)
+        if (intent.action == "com.sbkcastro.monitor.REFRESH_WIDGET") {
+            // Refresh manual - ejecutar worker inmediatamente
+            val workRequest = OneTimeWorkRequestBuilder<WidgetUpdateWorker>()
+                .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
+                .build()
+            WorkManager.getInstance(context).enqueue(workRequest)
+        }
+    }
+
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
         for (appWidgetId in appWidgetIds) {
             updateWidget(context, appWidgetManager, appWidgetId)
@@ -61,10 +72,22 @@ class ServerWidgetProvider : AppWidgetProvider() {
             setDefaultValues(views)
         }
 
+        // Click en el widget abre la app
         val intent = Intent(context, LoginActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(context, 0, intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         views.setOnClickPendingIntent(R.id.widgetRoot, pendingIntent)
+
+        // Click en refresh actualiza manualmente
+        val refreshIntent = Intent(context, ServerWidgetProvider::class.java).apply {
+            action = "com.sbkcastro.monitor.REFRESH_WIDGET"
+            putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
+        }
+        val refreshPendingIntent = PendingIntent.getBroadcast(
+            context, appWidgetId, refreshIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        views.setOnClickPendingIntent(R.id.widgetRefresh, refreshPendingIntent)
 
         appWidgetManager.updateAppWidget(appWidgetId, views)
     }
@@ -77,7 +100,7 @@ class ServerWidgetProvider : AppWidgetProvider() {
     }
 
     private fun scheduleUpdates(context: Context) {
-        val request = PeriodicWorkRequestBuilder<WidgetUpdateWorker>(15, TimeUnit.MINUTES)
+        val request = PeriodicWorkRequestBuilder<WidgetUpdateWorker>(10, TimeUnit.MINUTES)
             .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
             .build()
         WorkManager.getInstance(context).enqueueUniquePeriodicWork(
