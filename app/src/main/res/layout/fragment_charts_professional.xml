@@ -66,6 +66,42 @@
             </com.google.android.material.button.MaterialButtonToggleGroup>
         </LinearLayout>
 
+        <!-- Error message -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/errorCard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:visibility="gone"
+            app:cardBackgroundColor="#FFEBEE"
+            app:cardElevation="2dp"
+            app:cardCornerRadius="8dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="12dp">
+
+                <TextView
+                    android:id="@+id/errorMessage"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="#C62828"
+                    android:textSize="14sp"
+                    android:text="Error"/>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnRetry"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Reintentar"
+                    android:textColor="#C62828"
+                    android:layout_gravity="end"/>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
         <!-- Resumen actual con porcentajes -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"

@@ -16,24 +16,47 @@ class WidgetUpdateWorker(
 
     override suspend fun doWork(): Result {
         try {
-            val securePrefs = context.getSharedPreferences("sbk_secure_prefs", Context.MODE_PRIVATE)
+            val masterKey = androidx.security.crypto.MasterKey.Builder(context)
+                .setKeyScheme(androidx.security.crypto.MasterKey.KeyScheme.AES256_GCM)
+                .build()
+
+            val securePrefs = try {
+                androidx.security.crypto.EncryptedSharedPreferences.create(
+                    context, "sbk_secure_prefs", masterKey,
+                    androidx.security.crypto.EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                    androidx.security.crypto.EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+                )
+            } catch (e: Exception) {
+                context.getSharedPreferences("sbk_secure_prefs", Context.MODE_PRIVATE).edit().clear().apply()
+                java.io.File(context.filesDir.parent, "shared_prefs/sbk_secure_prefs.xml").delete()
+                return Result.failure()
+            }
             val serverUrl = securePrefs.getString("server_url", "") ?: return Result.failure()
-            val token = securePrefs.getString("auth_token", "") ?: return Result.failure()
 
-            if (serverUrl.isEmpty() || token.isEmpty()) return Result.failure()
+            if (serverUrl.isEmpty()) return Result.failure()
 
-            ApiClient.initialize(serverUrl)
-            ApiClient.setToken(token)
+            ApiClient.initialize(context, serverUrl)
 
+            // El token se obtiene automáticamente desde AuthInterceptor
             val metrics = ApiClient.getService().getMetrics()
 
-            val widgetPrefs = context.getSharedPreferences("widget_data", Context.MODE_PRIVATE)
-            widgetPrefs.edit()
-                .putString("cpu", metrics.cpu.usage.toString())
-                .putString("ram", metrics.memory.usagePercent.toString())
-                .putString("disk", metrics.disk.usagePercent.toString())
-                .putString("status", "Online")
-                .apply()
+            // Usar charts_data para consistencia con el ViewModel
+            val chartsPrefs = context.getSharedPreferences("charts_data", Context.MODE_PRIVATE)
+            val metricsJson = chartsPrefs.getString("metrics_data", null)
+            val json = if (metricsJson != null) org.json.JSONObject(metricsJson) else org.json.JSONObject()
+
+            // Agregar nuevo punto de datos
+            val metricsArray = json.optJSONArray("metrics") ?: org.json.JSONArray()
+            val newMetric = org.json.JSONObject().apply {
+                put("timestamp", System.currentTimeMillis())
+                put("cpu", metrics.cpu.usage.toDouble())
+                put("ram", metrics.memory.usagePercent.toDouble())
+                put("disk", metrics.disk.usagePercent.toDouble())
+            }
+            metricsArray.put(newMetric)
+            json.put("metrics", metricsArray)
+
+            chartsPrefs.edit().putString("metrics_data", json.toString()).apply()
 
             val appWidgetManager = AppWidgetManager.getInstance(context)
             val widgetIds = appWidgetManager.getAppWidgetIds(

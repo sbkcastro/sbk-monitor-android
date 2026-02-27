@@ -23,23 +23,13 @@ class LoginActivity : AppCompatActivity() {
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val masterKey = MasterKey.Builder(this)
-            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-            .build()
-
-        securePrefs = EncryptedSharedPreferences.create(
-            this, "sbk_secure_prefs", masterKey,
-            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-        )
+        securePrefs = createSecurePrefs()
 
         val savedUrl = securePrefs.getString("server_url", "") ?: ""
-        val savedToken = securePrefs.getString("auth_token", "") ?: ""
         binding.editServerUrl.setText(savedUrl)
 
-        if (savedUrl.isNotEmpty() && savedToken.isNotEmpty()) {
-            ApiClient.initialize(savedUrl)
-            ApiClient.setToken(savedToken)
+        if (savedUrl.isNotEmpty()) {
+            ApiClient.initialize(this, savedUrl)
             tryAutoLogin()
         }
 
@@ -50,8 +40,9 @@ class LoginActivity : AppCompatActivity() {
         binding.progressBar.visibility = View.VISIBLE
         lifecycleScope.launch {
             try {
-                val health = ApiClient.getService().health()
-                if (health.status == "ok") {
+                // Usar endpoint autenticado para verificar token válido
+                val metrics = ApiClient.getService().getMetrics()
+                if (metrics.cpu.usage >= 0) {
                     goToMain()
                     return@launch
                 }
@@ -76,16 +67,22 @@ class LoginActivity : AppCompatActivity() {
         binding.btnLogin.isEnabled = false
         binding.progressBar.visibility = View.VISIBLE
 
-        ApiClient.initialize(serverUrl)
+        ApiClient.initialize(this, serverUrl)
 
         lifecycleScope.launch {
             try {
-                val response = ApiClient.getService().login(LoginRequest(password))
-                ApiClient.setToken(response.token)
+                val response = ApiClient.getServiceWithoutInterceptor().login(LoginRequest(password))
 
+                // Guardar credenciales en AuthInterceptor para auto-renovación
+                ApiClient.getAuthInterceptor()?.saveLoginCredentials(
+                    token = response.token,
+                    expiresIn = response.expiresIn,
+                    password = password
+                )
+
+                // Guardar solo la URL en prefs locales
                 securePrefs.edit()
                     .putString("server_url", serverUrl)
-                    .putString("auth_token", response.token)
                     .apply()
 
                 goToMain()
@@ -100,5 +97,39 @@ class LoginActivity : AppCompatActivity() {
     private fun goToMain() {
         startActivity(Intent(this, MainActivity::class.java))
         finish()
+    }
+
+    private fun createSecurePrefs(): SharedPreferences {
+        return try {
+            val masterKey = MasterKey.Builder(this)
+                .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+                .build()
+            EncryptedSharedPreferences.create(
+                this, "sbk_secure_prefs", masterKey,
+                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            )
+        } catch (e: Exception) {
+            android.util.Log.w("LoginActivity", "Clearing corrupt EncryptedSharedPreferences", e)
+            // Borrar prefs corruptos
+            val prefsDir = java.io.File(filesDir.parent, "shared_prefs")
+            prefsDir.listFiles()?.filter { it.name.startsWith("sbk_secure") || it.name.startsWith("auth_prefs") }
+                ?.forEach { it.delete() }
+            // Borrar MasterKey del Android Keystore
+            try {
+                val keyStore = java.security.KeyStore.getInstance("AndroidKeyStore")
+                keyStore.load(null)
+                keyStore.deleteEntry("_androidx_security_master_key_")
+            } catch (_: Exception) {}
+            // Recrear todo desde cero
+            val masterKey = MasterKey.Builder(this)
+                .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+                .build()
+            EncryptedSharedPreferences.create(
+                this, "sbk_secure_prefs", masterKey,
+                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            )
+        }
     }
 }

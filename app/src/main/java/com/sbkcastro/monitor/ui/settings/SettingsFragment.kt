@@ -7,10 +7,12 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import com.sbkcastro.monitor.BuildConfig
 import com.sbkcastro.monitor.LoginActivity
 import com.sbkcastro.monitor.api.ApiClient
 import com.sbkcastro.monitor.databinding.FragmentSettingsBinding
+import kotlinx.coroutines.launch
 
 class SettingsFragment : Fragment() {
     private var _binding: FragmentSettingsBinding? = null
@@ -28,13 +30,43 @@ class SettingsFragment : Fragment() {
         binding.serverText.text = "Conectado al servidor"
 
         binding.btnLogout.setOnClickListener {
-            ApiClient.clearToken()
-            startActivity(Intent(requireContext(), LoginActivity::class.java))
-            requireActivity().finish()
+            ApiClient.clearAuth()
+            // Forzar ir a login sin auto-login posible
+            val intent = Intent(requireContext(), LoginActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            startActivity(intent)
         }
 
         binding.btnTestConnection.setOnClickListener {
-            Toast.makeText(requireContext(), "Probando conexion...", Toast.LENGTH_SHORT).show()
+            testConnection()
+        }
+    }
+
+    private fun testConnection() {
+        binding.btnTestConnection.isEnabled = false
+        binding.btnTestConnection.text = "Probando..."
+
+        lifecycleScope.launch {
+            try {
+                val health = ApiClient.getServiceWithoutInterceptor().health()
+                if (health.status == "ok") {
+                    // Ahora probar con autenticación
+                    try {
+                        val metrics = ApiClient.getService().getMetrics()
+                        binding.serverText.text = "Servidor OK | CPU: ${String.format("%.1f", metrics.cpu.usage)}% | API v${health.version}"
+                        Toast.makeText(requireContext(), "Conexion OK - Servidor y token validos", Toast.LENGTH_LONG).show()
+                    } catch (e: Exception) {
+                        binding.serverText.text = "Servidor alcanzable pero token invalido"
+                        Toast.makeText(requireContext(), "Servidor OK pero token expirado. Cierra sesion.", Toast.LENGTH_LONG).show()
+                    }
+                }
+            } catch (e: Exception) {
+                binding.serverText.text = "Error: ${e.message}"
+                Toast.makeText(requireContext(), "Error conexion: ${e.message}", Toast.LENGTH_LONG).show()
+            } finally {
+                binding.btnTestConnection.isEnabled = true
+                binding.btnTestConnection.text = "Probar Conexion"
+            }
         }
     }
 

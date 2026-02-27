@@ -1,177 +1,94 @@
 package com.sbkcastro.monitor.ui.charts
 
 import android.app.Application
-import android.content.Context
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.map
 import androidx.lifecycle.viewModelScope
 import com.sbkcastro.monitor.api.ApiClient
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.json.JSONObject
 
 class ChartsProfessionalViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val _allMetrics = MutableLiveData<List<MetricPoint>>()
-    private val _timeRange = MutableLiveData<TimeRange>(TimeRange.FOUR_HOURS)
-    private val context = application.applicationContext
+    private val _metrics = MutableLiveData<List<MetricPoint>>()
+    val metrics: LiveData<List<MetricPoint>> = _metrics
 
-    val filteredMetrics: LiveData<List<MetricPoint>> = _timeRange.map { range ->
-        filterMetricsByTimeRange(_allMetrics.value ?: emptyList(), range)
+    private val _timeRange = MutableLiveData(TimeRange.FOUR_HOURS)
+    val timeRange: LiveData<TimeRange> = _timeRange
+
+    private val _fetchStatus = MutableLiveData<FetchStatus>()
+    val fetchStatus: LiveData<FetchStatus> = _fetchStatus
+
+    sealed class FetchStatus {
+        object Loading : FetchStatus()
+        object Success : FetchStatus()
+        data class Error(val message: String, val isAuthError: Boolean = false) : FetchStatus()
     }
 
     init {
-        // Cargar historial guardado
-        loadStoredMetrics()
-
-        // Iniciar actualización automática cada 5 minutos
+        fetchHistory()
         startAutoUpdate()
     }
 
     fun setTimeRange(range: TimeRange) {
         _timeRange.value = range
+        fetchHistory()
     }
 
-    fun addMetric(cpu: Float, ram: Float, disk: Float) {
-        val currentList = _allMetrics.value ?: emptyList()
-        val newMetric = MetricPoint(
-            timestamp = System.currentTimeMillis(),
-            cpuUsage = cpu,
-            ramUsage = ram,
-            diskUsage = disk
-        )
+    fun fetchHistory() {
+        viewModelScope.launch {
+            _fetchStatus.value = FetchStatus.Loading
 
-        // Mantener últimas 24 horas de datos (asumiendo 1 punto cada 5 minutos = 288 puntos)
-        val maxDataPoints = 288
-        val updatedList = (currentList + newMetric).takeLast(maxDataPoints)
+            try {
+                val range = _timeRange.value ?: TimeRange.FOUR_HOURS
+                val rangeParam = when (range) {
+                    TimeRange.ONE_HOUR -> "1h"
+                    TimeRange.FOUR_HOURS -> "4h"
+                    TimeRange.TWENTY_FOUR_HOURS -> "24h"
+                }
 
-        _allMetrics.value = updatedList
+                val apiService = ApiClient.getService()
+                val response = apiService.getMetricsHistory(rangeParam)
 
-        // Forzar actualización de filteredMetrics
-        _timeRange.value = _timeRange.value
-    }
+                val points = response.points.map { p ->
+                    MetricPoint(
+                        timestamp = p.ts,
+                        cpuUsage = p.cpu.toFloat(),
+                        ramUsage = p.ram.toFloat(),
+                        diskUsage = p.disk.toFloat()
+                    )
+                }
 
-    private fun filterMetricsByTimeRange(metrics: List<MetricPoint>, range: TimeRange): List<MetricPoint> {
-        if (metrics.isEmpty()) return emptyList()
+                _metrics.value = points
+                _fetchStatus.value = FetchStatus.Success
 
-        val now = System.currentTimeMillis()
-        val cutoffTime = now - (range.minutes * 60 * 1000)
+            } catch (e: Exception) {
+                android.util.Log.e("ChartsProfessional", "Error fetching history: ${e.message}", e)
 
-        return metrics.filter { it.timestamp >= cutoffTime }
-    }
+                val isAuthError = e.message?.contains("401") == true ||
+                                  e.message?.contains("Unauthorized") == true
 
-    fun loadSampleData() {
-        // Generar datos de muestra para testing
-        val sampleMetrics = mutableListOf<MetricPoint>()
-        val now = System.currentTimeMillis()
+                val errorMsg = when {
+                    isAuthError -> "Error de autenticación. Cierra sesión y vuelve a iniciar."
+                    e.message?.contains("timeout") == true -> "Timeout conectando al servidor."
+                    e.message?.contains("Unable to resolve host") == true -> "Sin conexión a internet."
+                    else -> "Error obteniendo historial: ${e.message}"
+                }
 
-        // Generar 288 puntos (24 horas, cada 5 minutos)
-        for (i in 287 downTo 0) {
-            val timestamp = now - (i * 5 * 60 * 1000)
-            val cpu = (10..80).random().toFloat() + (0..99).random() / 100f
-            val ram = (20..90).random().toFloat() + (0..99).random() / 100f
-            val disk = (50..75).random().toFloat() + (0..99).random() / 100f
-
-            sampleMetrics.add(MetricPoint(timestamp, cpu, ram, disk))
+                _fetchStatus.value = FetchStatus.Error(errorMsg, isAuthError)
+            }
         }
-
-        _allMetrics.value = sampleMetrics
-    }
-
-    fun clearHistory() {
-        _allMetrics.value = emptyList()
-    }
-
-    fun getMetricsCount(): Int {
-        return _allMetrics.value?.size ?: 0
     }
 
     private fun startAutoUpdate() {
         viewModelScope.launch {
             while (true) {
-                fetchRealMetrics()
                 delay(5 * 60 * 1000) // 5 minutos
+                fetchHistory()
             }
         }
     }
 
-    fun fetchRealMetrics() {
-        viewModelScope.launch {
-            try {
-                val apiService = ApiClient.getService()
-                val response = apiService.getMetrics()
-
-                val cpu = response.cpu.usage.toFloat()
-                val ram = response.memory.usagePercent.toFloat()
-                val disk = response.disk.usagePercent.toFloat()
-
-                addMetric(cpu, ram, disk)
-                saveMetrics()
-            } catch (e: Exception) {
-                // Si falla, usar loadSampleData como fallback
-                if (_allMetrics.value.isNullOrEmpty()) {
-                    loadSampleData()
-                }
-            }
-        }
-    }
-
-    private fun parseDiskUsage(diskString: String): Float {
-        return try {
-            diskString.replace("%", "").toFloat()
-        } catch (e: Exception) {
-            67f // Default
-        }
-    }
-
-    private fun saveMetrics() {
-        val prefs = context.getSharedPreferences("charts_data", Context.MODE_PRIVATE)
-        val metrics = _allMetrics.value ?: return
-
-        val json = JSONObject()
-        val metricsArray = org.json.JSONArray()
-
-        metrics.forEach { metric ->
-            val metricJson = JSONObject().apply {
-                put("timestamp", metric.timestamp)
-                put("cpu", metric.cpuUsage)
-                put("ram", metric.ramUsage)
-                put("disk", metric.diskUsage)
-            }
-            metricsArray.put(metricJson)
-        }
-
-        json.put("metrics", metricsArray)
-        prefs.edit().putString("metrics_data", json.toString()).apply()
-    }
-
-    private fun loadStoredMetrics() {
-        val prefs = context.getSharedPreferences("charts_data", Context.MODE_PRIVATE)
-        val jsonString = prefs.getString("metrics_data", null) ?: return
-
-        try {
-            val json = JSONObject(jsonString)
-            val metricsArray = json.getJSONArray("metrics")
-            val metricsList = mutableListOf<MetricPoint>()
-
-            for (i in 0 until metricsArray.length()) {
-                val metricJson = metricsArray.getJSONObject(i)
-                metricsList.add(
-                    MetricPoint(
-                        timestamp = metricJson.getLong("timestamp"),
-                        cpuUsage = metricJson.getDouble("cpu").toFloat(),
-                        ramUsage = metricJson.getDouble("ram").toFloat(),
-                        diskUsage = metricJson.getDouble("disk").toFloat()
-                    )
-                )
-            }
-
-            _allMetrics.value = metricsList
-        } catch (e: Exception) {
-            // Si falla al cargar, iniciar con datos vacíos
-            _allMetrics.value = emptyList()
-        }
-    }
+    fun getMetricsCount(): Int = _metrics.value?.size ?: 0
 }

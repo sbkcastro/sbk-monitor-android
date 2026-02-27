@@ -28,9 +28,21 @@ interface ApiService {
     @GET("api/chat/history")
     suspend fun getChatHistory(): ChatHistoryResponse
 
+    @GET("api/chat/presets")
+    suspend fun getChatPresets(): PresetsResponse
+
     @GET("api/services/status")
     suspend fun getServicesStatus(): ServicesResponse
 
     @GET("api/security/alerts")
     suspend fun getSecurityAlerts(): AlertsResponse
+
+    @GET("api/system/history")
+    suspend fun getMetricsHistory(@Query("range") range: String = "4h"): MetricsHistoryResponse
+
+    @GET("api/security/ids")
+    suspend fun getIDSStatus(): IDSStatusResponse
+
+    @GET("api/security/ids/alerts")
+    suspend fun getIDSAlerts(@Query("limit") limit: Int = 20): IDSAlertsResponse
 }

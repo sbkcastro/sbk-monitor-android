@@ -33,4 +33,14 @@
         android:id="@+id/servicesFragment"
         android:name="com.sbkcastro.monitor.ui.services.ServicesFragment"
         android:label="Servicios"/>
+
+    <fragment
+        android:id="@+id/lxcManagementFragment"
+        android:name="com.sbkcastro.monitor.ui.lxc.LXCManagementFragment"
+        android:label="LXC"/>
+
+    <fragment
+        android:id="@+id/idsDashboardFragment"
+        android:name="com.sbkcastro.monitor.ui.ids.IDSDashboardFragment"
+        android:label="IDS"/>
 </navigation>

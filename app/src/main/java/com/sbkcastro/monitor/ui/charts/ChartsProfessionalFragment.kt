@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
@@ -22,7 +23,8 @@ class ChartsProfessionalFragment : Fragment() {
     private val binding get() = _binding!!
     private val viewModel: ChartsProfessionalViewModel by viewModels()
 
-    private var selectedTimeRange = TimeRange.FOUR_HOURS
+    // Timestamps array for X axis formatting
+    private var currentTimestamps: List<Long> = emptyList()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentChartsProfessionalBinding.inflate(inflater, container, false)
@@ -35,14 +37,36 @@ class ChartsProfessionalFragment : Fragment() {
         setupCharts()
         setupTimeRangeSelector()
         observeData()
+        setupErrorHandling()
 
-        // Botón actualizar
         binding.fabRefresh.setOnClickListener {
-            viewModel.fetchRealMetrics()
+            viewModel.fetchHistory()
+        }
+    }
+
+    private fun setupErrorHandling() {
+        viewModel.fetchStatus.observe(viewLifecycleOwner) { status ->
+            when (status) {
+                is ChartsProfessionalViewModel.FetchStatus.Loading -> {
+                    binding.errorCard.visibility = View.GONE
+                }
+                is ChartsProfessionalViewModel.FetchStatus.Success -> {
+                    binding.errorCard.visibility = View.GONE
+                }
+                is ChartsProfessionalViewModel.FetchStatus.Error -> {
+                    binding.errorMessage.text = if (status.isAuthError) {
+                        "${status.message}\n\n💡 Sugerencia: Ve a Configuración → Cerrar sesión"
+                    } else {
+                        status.message
+                    }
+                    binding.errorCard.visibility = View.VISIBLE
+                }
+            }
         }
 
-        // Fetch inicial de métricas reales
-        viewModel.fetchRealMetrics()
+        binding.btnRetry.setOnClickListener {
+            viewModel.fetchHistory()
+        }
     }
 
     private fun setupCharts() {
@@ -55,7 +79,6 @@ class ChartsProfessionalFragment : Fragment() {
                 setPinchZoom(true)
                 setDrawGridBackground(false)
 
-                // Eje X (tiempo)
                 xAxis.apply {
                     position = XAxis.XAxisPosition.BOTTOM
                     setDrawGridLines(true)
@@ -64,7 +87,6 @@ class ChartsProfessionalFragment : Fragment() {
                     valueFormatter = TimeAxisFormatter()
                 }
 
-                // Eje Y izquierdo (porcentaje)
                 axisLeft.apply {
                     setDrawGridLines(true)
                     gridColor = Color.parseColor("#E0E0E0")
@@ -74,16 +96,13 @@ class ChartsProfessionalFragment : Fragment() {
                     valueFormatter = PercentFormatter()
                 }
 
-                // Deshabilitar eje Y derecho
                 axisRight.isEnabled = false
 
-                // Leyenda
                 legend.apply {
                     textColor = Color.parseColor("#666666")
                     textSize = 11f
                 }
 
-                // Animación
                 animateX(500)
             }
         }
@@ -92,41 +111,43 @@ class ChartsProfessionalFragment : Fragment() {
     private fun setupTimeRangeSelector() {
         binding.timeRangeToggle.addOnButtonCheckedListener { _, checkedId, isChecked ->
             if (isChecked) {
-                selectedTimeRange = when (checkedId) {
+                val range = when (checkedId) {
                     binding.btn1h.id -> TimeRange.ONE_HOUR
                     binding.btn4h.id -> TimeRange.FOUR_HOURS
                     binding.btn24h.id -> TimeRange.TWENTY_FOUR_HOURS
                     else -> TimeRange.FOUR_HOURS
                 }
-                viewModel.setTimeRange(selectedTimeRange)
+                viewModel.setTimeRange(range)
             }
         }
 
-        // Seleccionar 4h por defecto
         binding.btn4h.isChecked = true
     }
 
     private fun observeData() {
-        viewModel.filteredMetrics.observe(viewLifecycleOwner) { metrics ->
+        viewModel.metrics.observe(viewLifecycleOwner) { metrics ->
             if (metrics.isEmpty()) return@observe
 
-            // Actualizar valores actuales
+            // Store timestamps for X axis formatter
+            currentTimestamps = metrics.map { it.timestamp }
+
+            // Current values
             val latest = metrics.last()
             binding.currentCpu.text = String.format("%.1f", latest.cpuUsage)
             binding.currentRam.text = String.format("%.1f", latest.ramUsage)
             binding.currentDisk.text = String.format("%.1f", latest.diskUsage)
 
-            // Actualizar gráficos
+            // Update charts with index as X, real timestamps for formatting
             updateChart(binding.cpuChart, metrics.map { it.cpuUsage }, "CPU %", Color.parseColor("#42A5F5"))
             updateChart(binding.ramChart, metrics.map { it.ramUsage }, "RAM %", Color.parseColor("#66BB6A"))
             updateChart(binding.diskChart, metrics.map { it.diskUsage }, "Disco %", Color.parseColor("#FFA726"))
 
-            // Actualizar estadísticas
+            // Statistics
             updateStatistics(metrics)
         }
     }
 
-    private fun updateChart(chart: com.github.mikephil.charting.charts.LineChart, values: List<Float>, label: String, color: Int) {
+    private fun updateChart(chart: LineChart, values: List<Float>, label: String, color: Int) {
         val entries = values.mapIndexed { index, value ->
             Entry(index.toFloat(), value)
         }
@@ -135,13 +156,13 @@ class ChartsProfessionalFragment : Fragment() {
             this.color = color
             lineWidth = 2.5f
             setCircleColor(color)
-            circleRadius = 3f
+            circleRadius = if (values.size > 60) 0f else 3f
             setDrawCircleHole(false)
-            valueTextSize = 0f  // No mostrar valores en los puntos
+            valueTextSize = 0f
             setDrawFilled(true)
             fillColor = color
             fillAlpha = 30
-            mode = LineDataSet.Mode.CUBIC_BEZIER  // Línea suavizada
+            mode = LineDataSet.Mode.CUBIC_BEZIER
             cubicIntensity = 0.2f
         }
 
@@ -171,13 +192,17 @@ class ChartsProfessionalFragment : Fragment() {
         _binding = null
     }
 
-    // Formateadores
-    class TimeAxisFormatter : ValueFormatter() {
+    /**
+     * Formats X axis using real server timestamps.
+     * X values are indices into currentTimestamps array.
+     */
+    inner class TimeAxisFormatter : ValueFormatter() {
         private val format = SimpleDateFormat("HH:mm", Locale.getDefault())
 
         override fun getFormattedValue(value: Float): String {
-            val time = System.currentTimeMillis() - ((value.toInt()) * 60 * 1000).toLong()
-            return format.format(Date(time))
+            val index = value.toInt()
+            if (index < 0 || index >= currentTimestamps.size) return ""
+            return format.format(Date(currentTimestamps[index]))
         }
     }
 
