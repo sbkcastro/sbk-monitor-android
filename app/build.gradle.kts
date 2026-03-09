@@ -11,8 +11,8 @@ android {
         applicationId = "com.sbkcastro.monitor.v2"
         minSdk = 26
         targetSdk = 34
-        versionCode = 18
-        versionName = "2.3.8"
+        versionCode = 25
+        versionName = "2.8.0"
     }
 
     signingConfigs {
