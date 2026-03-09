@@ -42,6 +42,15 @@
                 android:resource="@xml/server_widget_info" />
         </receiver>
 
+        <receiver
+            android:name=".worker.ApprovalActionReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="CLAUDE_APPROVE"/>
+                <action android:name="CLAUDE_DENY"/>
+            </intent-filter>
+        </receiver>
+
     </application>
 
 </manifest>

@@ -2,10 +2,13 @@ package com.sbkcastro.monitor
 
 import android.app.Application
 import android.util.Log
+import com.sbkcastro.monitor.worker.ClaudeApprovalWorker
 
 class SbkMonitorApp : Application() {
     override fun onCreate() {
         super.onCreate()
+        ClaudeApprovalWorker.createChannel(this)
+        ClaudeApprovalWorker.schedule(this)
 
         // Inicializar crash reporter
         CrashReporter.initialize(this)
