@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/background_dark">
+
+    <!-- Sessions horizontal list -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvSessions"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:background="@color/surface_dark"
+        android:paddingStart="4dp"
+        android:paddingEnd="4dp"/>
+
+    <View android:layout_width="match_parent" android:layout_height="1dp"
+        android:background="#333344"/>
+
+    <!-- Chat messages -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvMessages"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:padding="8dp"
+        android:clipToPadding="false"/>
+
+    <!-- Approval banner (hidden by default) -->
+    <LinearLayout
+        android:id="@+id/layoutApproval"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="#1a1a2e"
+        android:padding="12dp"
+        android:visibility="gone">
+        <TextView
+            android:id="@+id/tvApprovalTool"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#ffcc44"
+            android:textSize="12sp"
+            android:fontFamily="monospace"
+            android:maxLines="4"
+            android:ellipsize="end"/>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="8dp">
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnApprove"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="4dp"
+                android:text="✅ Aprobar"
+                android:backgroundTint="#1a3a1a"/>
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDeny"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="4dp"
+                android:text="❌ Denegar"
+                android:backgroundTint="#3a1a1a"/>
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Input bar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="8dp"
+        android:background="@color/surface_dark">
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnNewSession"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_gravity="center_vertical"
+            android:layout_marginEnd="4dp"
+            android:text="+"
+            android:textSize="18sp"
+            android:padding="0dp"
+            style="@style/Widget.Material3.Button.OutlinedButton"/>
+        <EditText
+            android:id="@+id/etMessage"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:hint="Mensaje para Claude..."
+            android:textColor="@color/text_primary"
+            android:textColorHint="#888899"
+            android:inputType="textMultiLine"
+            android:maxLines="3"
+            android:background="@android:color/transparent"
+            android:paddingStart="8dp"/>
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSend"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="bottom"
+            android:layout_marginStart="4dp"
+            android:text="→"
+            android:textSize="18sp"
+            android:padding="0dp"/>
+    </LinearLayout>
+
+</LinearLayout>
