@@ -9,10 +9,6 @@
         android:icon="@android:drawable/ic_menu_manage"
         android:title="LXC"/>
     <item
-        android:id="@+id/idsDashboardFragment"
-        android:icon="@android:drawable/ic_menu_info_details"
-        android:title="IDS"/>
-    <item
         android:id="@+id/claudeRemoteFragment"
         android:icon="@android:drawable/ic_menu_edit"
         android:title="Claude"/>

@@ -14,6 +14,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import com.sbkcastro.monitor.R
 import com.sbkcastro.monitor.api.ApiClient
 import com.sbkcastro.monitor.api.ContainerActionRequest
@@ -38,6 +39,10 @@ class LXCManagementFragment : Fragment() {
 
         binding.swipeRefresh.setOnRefreshListener {
             fetchContainers()
+        }
+
+        binding.btnIdsShortcut.setOnClickListener {
+            findNavController().navigate(R.id.idsDashboardFragment)
         }
 
         binding.btnRetry.setOnClickListener {
