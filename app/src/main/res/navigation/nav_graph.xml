@@ -43,4 +43,9 @@
         android:id="@+id/idsDashboardFragment"
         android:name="com.sbkcastro.monitor.ui.ids.IDSDashboardFragment"
         android:label="IDS"/>
+
+    <fragment
+        android:id="@+id/claudeRemoteFragment"
+        android:name="com.sbkcastro.monitor.ui.claude.ClaudeRemoteFragment"
+        android:label="Claude"/>
 </navigation>
