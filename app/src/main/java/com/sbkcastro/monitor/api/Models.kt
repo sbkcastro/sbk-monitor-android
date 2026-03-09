@@ -82,10 +82,94 @@ data class IDSAlert(
     val signature: String,
     val category: String,
     val src_ip: String?,
-    val dest_ip: String?
+    val dest_ip: String?,
+    val count: Int = 1
 )
 data class IDSAlertsResponse(
     val alerts: List<IDSAlert>,
     val total: Int,
     val timestamp: Long
 )
+
+data class DockerLogsResponse(
+    val container: String,
+    val lxc: String,
+    val lines: Int,
+    val log: String,
+    val timestamp: Long
+)
+
+data class MemoryChip(
+    val date: String,
+    val topics: String,
+    val similarity: Double = 0.0
+)
+
+// --- IDS Stats (hourly buckets + severity counts) ---
+data class HourBucket(
+    val hour: Int,
+    val count: Int,
+    val maxSeverity: Int
+)
+
+data class TopIp(
+    val ip: String,
+    val count: Int,
+    val maxSeverity: Int
+)
+
+data class IdsStatsResponse(
+    val hourlyBuckets: List<HourBucket>,
+    val crit: Int,
+    val high: Int,
+    val med: Int,
+    val topIps: List<TopIp>,
+    val hours: Int,
+    val timestamp: Long
+)
+
+// ── Claude Remote Tab ────────────────────────────────────────────────────────
+
+data class ClaudeJobStartRequest(
+    val message: String,
+    val sessionId: String? = null
+)
+
+data class ClaudeJobStartResponse(
+    val jobId: String,
+    val sessionId: String?
+)
+
+data class ClaudeJobMessageRequest(val message: String)
+
+data class ClaudeJobMessageResponse(val newJobId: String)
+
+data class ClaudePendingApproval(
+    val id: String,
+    val tool: String,
+    val command: String
+)
+
+data class ClaudeSession(
+    val jobId: String,
+    val claudeSessionId: String?,
+    val startedAt: Long,
+    val lastActivity: Long,
+    val messageCount: Int,
+    val firstMessage: String,
+    val status: String,
+    val pendingApproval: ClaudePendingApproval?
+)
+
+data class ClaudePendingItem(
+    val jobId: String,
+    val firstMessage: String,
+    val id: String,
+    val tool: String,
+    val command: String,
+    val timestamp: Long
+)
+
+data class ClaudeSessionsResponse(val sessions: List<ClaudeSession>)
+data class ClaudePendingResponse(val pending: List<ClaudePendingItem>)
+data class ClaudeActionResponse(val ok: Boolean? = null, val error: String? = null)

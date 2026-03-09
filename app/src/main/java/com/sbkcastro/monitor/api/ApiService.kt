@@ -45,4 +45,43 @@ interface ApiService {
 
     @GET("api/security/ids/alerts")
     suspend fun getIDSAlerts(@Query("limit") limit: Int = 20): IDSAlertsResponse
+
+    @GET("api/containers/docker/{lxc}/{container}/logs")
+    suspend fun getDockerLogs(
+        @Path("lxc") lxc: String,
+        @Path("container") container: String,
+        @Query("lines") lines: Int = 100
+    ): DockerLogsResponse
+
+    @GET("api/security/ids/stats")
+    suspend fun getIDSStats(@Query("hours") hours: Int = 24): IdsStatsResponse
+
+    // ── Claude Remote Tab ──────────────────────────────────────────────────
+
+    @POST("api/claude/job/start")
+    suspend fun claudeJobStart(@Body request: ClaudeJobStartRequest): ClaudeJobStartResponse
+
+    @POST("api/claude/job/{id}/message")
+    suspend fun claudeJobMessage(
+        @Path("id") jobId: String,
+        @Body request: ClaudeJobMessageRequest
+    ): ClaudeJobMessageResponse
+
+    @POST("api/claude/job/{id}/approve")
+    suspend fun claudeJobApprove(@Path("id") jobId: String): ClaudeActionResponse
+
+    @POST("api/claude/job/{id}/deny")
+    suspend fun claudeJobDeny(@Path("id") jobId: String): ClaudeActionResponse
+
+    @GET("api/claude/job/pending")
+    suspend fun claudeJobPending(): ClaudePendingResponse
+
+    @GET("api/claude/job/sessions")
+    suspend fun claudeJobSessions(): ClaudeSessionsResponse
+
+    @DELETE("api/claude/job/{id}")
+    suspend fun claudeJobDelete(@Path("id") jobId: String): ClaudeActionResponse
+
+    // NOTE: SSE stream handled manually via OkHttp (not Retrofit)
+    // URL: "${ApiClient.getBaseUrl()}api/claude/job/{id}/stream"
 }
