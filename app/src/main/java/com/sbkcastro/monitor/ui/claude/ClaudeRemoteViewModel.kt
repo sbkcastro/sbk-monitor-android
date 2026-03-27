@@ -8,6 +8,7 @@ import com.sbkcastro.monitor.api.ApiClient
 import com.sbkcastro.monitor.api.ClaudeJobMessageRequest
 import com.sbkcastro.monitor.api.ClaudeJobStartRequest
 import com.sbkcastro.monitor.api.ClaudeSession
+import com.sbkcastro.monitor.api.MetaChatRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -37,6 +38,28 @@ class ClaudeRemoteViewModel : ViewModel() {
 
     val activeJobId = MutableLiveData<String?>(null)
 
+    // ── Meta-IA mode ──────────────────────────────────────────────────────────
+    val metaMode = MutableLiveData(false)
+    private var metaSessionId: String? = null
+    val metaThinking = MutableLiveData(false)
+
+    // ── Model selection ───────────────────────────────────────────────────────
+    companion object {
+        val MODELS = listOf(
+            "sonnet-4-6"  to "claude-sonnet-4-6",
+            "opus-4-6"    to "claude-opus-4-6",
+            "haiku-4-5"   to "claude-haiku-4-5-20251001"
+        )
+    }
+    val selectedModelIdx = MutableLiveData(0) // 0 = sonnet (default)
+    private val selectedModel get() = MODELS[selectedModelIdx.value ?: 0].second
+
+    fun cycleModel() {
+        val next = ((selectedModelIdx.value ?: 0) + 1) % MODELS.size
+        selectedModelIdx.value = next
+        addBubble(ChatBubble("system", "⬥ Modelo: ${MODELS[next].first}"))
+    }
+
     private var streamJob: Job? = null
 
     fun loadSessions() {
@@ -54,7 +77,7 @@ class ClaudeRemoteViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val resp = ApiClient.getService().claudeJobStart(
-                    ClaudeJobStartRequest(message, resumeSessionId)
+                    ClaudeJobStartRequest(message, resumeSessionId, selectedModel)
                 )
                 activeJobId.value = resp.jobId
                 addBubble(ChatBubble("user", message))
@@ -229,6 +252,51 @@ class ClaudeRemoteViewModel : ViewModel() {
         _bubbles.value = emptyList()
         streamingText.value = null
         _pendingApproval.value = null
+        metaSessionId = null
+    }
+
+    fun toggleMetaMode() {
+        val next = !(metaMode.value ?: false)
+        metaMode.value = next
+        if (!next) {
+            // Al salir de meta mode: limpiar sesión meta
+            metaSessionId?.let { sid ->
+                viewModelScope.launch {
+                    try { ApiClient.getService().metaSessionDelete(sid) } catch (_: Exception) {}
+                }
+            }
+            metaSessionId = null
+        }
+        addBubble(ChatBubble("system", if (next) "🤖 Meta-IA activada — habla conmigo y ejecutaré Claude cuando esté listo." else "⬥ Modo directo Claude CLI"))
+    }
+
+    fun sendMetaMessage(message: String) {
+        addBubble(ChatBubble("user", message))
+        metaThinking.value = true
+        viewModelScope.launch {
+            try {
+                val resp = ApiClient.getService().metaChat(
+                    MetaChatRequest(message, metaSessionId)
+                )
+                metaSessionId = resp.sessionId
+                withContext(Dispatchers.Main) {
+                    metaThinking.value = false
+                    if (resp.reply.isNotBlank()) {
+                        addBubble(ChatBubble("meta", resp.reply))
+                    }
+                    // Si meta-IA decidió ejecutar → lanzar Claude CLI
+                    if (!resp.executePrompt.isNullOrBlank()) {
+                        addBubble(ChatBubble("system", "🚀 Ejecutando en Claude CLI..."))
+                        startSession(resp.executePrompt)
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    metaThinking.value = false
+                    addBubble(ChatBubble("system", "❌ Meta-IA error: ${e.message}"))
+                }
+            }
+        }
     }
 
     private fun flushStreaming() {

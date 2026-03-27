@@ -89,6 +89,13 @@ interface ApiService {
     @GET("api/system/processes")
     suspend fun getProcesses(): ProcessesResponse
 
+    // ── Meta-IA ────────────────────────────────────────────────────────────────
+    @POST("api/claude/meta/chat")
+    suspend fun metaChat(@Body request: MetaChatRequest): MetaChatResponse
+
+    @DELETE("api/claude/meta/session/{id}")
+    suspend fun metaSessionDelete(@Path("id") sessionId: String): ClaudeActionResponse
+
     // ── Wazuh SIEM ─────────────────────────────────────────────────────────────
     @GET("api/security/wazuh/alerts")
     suspend fun getWazuhAlerts(@Query("limit") limit: Int = 30): WazuhAlertsResponse

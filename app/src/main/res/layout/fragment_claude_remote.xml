@@ -14,8 +14,50 @@
         android:paddingStart="4dp"
         android:paddingEnd="4dp"/>
 
+    <!-- Status bar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="28dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="10dp"
+        android:paddingEnd="10dp"
+        android:background="#0d1117">
+        <TextView
+            android:id="@+id/tvStatusDot"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="○"
+            android:textSize="10sp"
+            android:fontFamily="monospace"
+            android:textColor="#8b949e"/>
+        <TextView
+            android:id="@+id/tvStatusLabel"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
+            android:text=" claude  [toca para meta-IA]"
+            android:textSize="10sp"
+            android:fontFamily="monospace"
+            android:textColor="#58a6ff"
+            android:clickable="true"
+            android:focusable="true"/>
+        <TextView
+            android:id="@+id/tvStatusSession"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:text="[sonnet-4-6]"
+            android:textSize="9sp"
+            android:fontFamily="monospace"
+            android:textColor="#484f58"
+            android:clickable="true"
+            android:focusable="true"/>
+    </LinearLayout>
+
     <View android:layout_width="match_parent" android:layout_height="1dp"
-        android:background="#333344"/>
+        android:background="#21262d"/>
 
     <!-- Chat messages -->
     <androidx.recyclerview.widget.RecyclerView
@@ -90,7 +132,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:hint="Mensaje para Claude..."
+            android:hint="Mensaje... (toca label para meta-IA)"
             android:textColor="@color/text_primary"
             android:textColorHint="#888899"
             android:inputType="textMultiLine"

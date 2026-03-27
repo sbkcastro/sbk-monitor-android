@@ -120,6 +120,16 @@ class BubbleAdapter : ListAdapter<ChatBubble, BubbleAdapter.VH>(DIFF) {
                 container.setBackgroundColor(C_CODE_BG)
                 body.setOnLongClickListener { v -> copyToClipboard(v.context, item.text); true }
             }
+            "meta" -> {
+                prefix.visibility = View.VISIBLE
+                prefix.text = "🤖"
+                prefix.setTextColor(C_YELLOW)
+                body.text = TerminalRenderer.render(item.text)
+                body.setTextColor(C_YELLOW)
+                body.typeface = Typeface.MONOSPACE
+                container.setBackgroundColor(C_CODE_BG)
+                body.setOnLongClickListener { v -> copyToClipboard(v.context, item.text); true }
+            }
             "system" -> {
                 prefix.visibility = View.GONE
                 body.text = item.text

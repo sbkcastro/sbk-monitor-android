@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- SIEM HUD Background -->
+    <color name="siem_bg_deep">#060810</color>
+    <color name="siem_bg_panel">#0D1117</color>
+    <color name="siem_bg_card">#111827</color>
+    <color name="siem_border">#1E293B</color>
+    <color name="siem_border_bright">#334155</color>
+
+    <!-- Threat Level Colors -->
+    <color name="siem_nominal">#00FF88</color>
+    <color name="siem_nominal_dim">#004422</color>
+    <color name="siem_elevated">#FFB020</color>
+    <color name="siem_elevated_dim">#3D2800</color>
+    <color name="siem_high">#FF6020</color>
+    <color name="siem_high_dim">#3D1500</color>
+    <color name="siem_critical">#FF1744</color>
+    <color name="siem_critical_dim">#3D0010</color>
+
+    <!-- Severity Colors -->
+    <color name="siem_sev1">#FF1744</color>
+    <color name="siem_sev2">#FF6020</color>
+    <color name="siem_sev3">#FFB020</color>
+    <color name="siem_sev_low">#4CAF50</color>
+
+    <!-- Text Colors -->
+    <color name="siem_text_primary">#E2E8F0</color>
+    <color name="siem_text_secondary">#94A3B8</color>
+    <color name="siem_text_accent">#00FF88</color>
+    <color name="siem_text_dim">#475569</color>
+
+    <!-- Chart Colors -->
+    <color name="siem_chart_bar_nominal">#00AA55</color>
+    <color name="siem_chart_bar_elevated">#CC8800</color>
+    <color name="siem_chart_bar_high">#CC4400</color>
+    <color name="siem_chart_bar_critical">#CC1133</color>
+    <color name="siem_chart_grid">#1E293B</color>
+</resources>

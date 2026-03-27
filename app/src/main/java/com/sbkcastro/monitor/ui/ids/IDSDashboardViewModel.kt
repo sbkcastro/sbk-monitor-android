@@ -7,12 +7,16 @@ import androidx.lifecycle.viewModelScope
 import com.sbkcastro.monitor.api.ApiClient
 import com.sbkcastro.monitor.api.IDSAlert
 import com.sbkcastro.monitor.api.IDSStatusResponse
+import com.sbkcastro.monitor.api.IdsStatsResponse
 import kotlinx.coroutines.launch
 
 class IDSDashboardViewModel : ViewModel() {
 
     private val _idsStatus = MutableLiveData<IDSStatusResponse>()
     val idsStatus: LiveData<IDSStatusResponse> = _idsStatus
+
+    private val _idsStats = MutableLiveData<IdsStatsResponse>()
+    val idsStats: LiveData<IdsStatsResponse> = _idsStats
 
     private val _alerts = MutableLiveData<List<IDSAlert>>()
     val alerts: LiveData<List<IDSAlert>> = _alerts
@@ -36,6 +40,9 @@ class IDSDashboardViewModel : ViewModel() {
                 val api = ApiClient.getService()
                 val status = api.getIDSStatus()
                 _idsStatus.value = status
+
+                val stats = api.getIDSStats(24)
+                _idsStats.value = stats
 
                 val alertsResponse = api.getIDSAlerts(20)
                 _alerts.value = alertsResponse.alerts

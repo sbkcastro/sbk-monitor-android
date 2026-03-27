@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="8dp"
+        android:background="?attr/colorSurface">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Procesos del sistema"
+            android:textAppearance="?attr/textAppearanceTitleSmall"
+            android:textStyle="bold"/>
+
+        <TextView
+            android:id="@+id/tvLastUpdate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="11sp"
+            android:textColor="?attr/colorOnSurfaceVariant"/>
+    </LinearLayout>
+
+    <!-- Header row -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="32dp"
+        android:orientation="horizontal"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:background="?attr/colorSurfaceVariant">
+
+        <TextView android:layout_width="44dp" android:layout_height="match_parent"
+            android:gravity="center_vertical" android:text="PID" android:textSize="11sp" android:textStyle="bold"/>
+        <TextView android:layout_width="56dp" android:layout_height="match_parent"
+            android:gravity="center_vertical" android:text="User" android:textSize="11sp" android:textStyle="bold"/>
+        <TextView android:layout_width="48dp" android:layout_height="match_parent"
+            android:gravity="center_vertical" android:text="CPU" android:textSize="11sp" android:textStyle="bold"/>
+        <TextView android:layout_width="48dp" android:layout_height="match_parent"
+            android:gravity="center_vertical" android:text="MEM" android:textSize="11sp" android:textStyle="bold"/>
+        <TextView android:layout_width="0dp" android:layout_weight="1" android:layout_height="match_parent"
+            android:gravity="center_vertical" android:text="Comando" android:textSize="11sp" android:textStyle="bold"/>
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tvError"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="12dp"
+        android:textColor="?attr/colorError"
+        android:visibility="gone"/>
+
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipeRefresh"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvProcesses"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingBottom="8dp"/>
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+</LinearLayout>

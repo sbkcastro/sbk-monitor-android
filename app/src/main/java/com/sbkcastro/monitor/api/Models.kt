@@ -132,7 +132,8 @@ data class IdsStatsResponse(
 
 data class ClaudeJobStartRequest(
     val message: String,
-    val sessionId: String? = null
+    val sessionId: String? = null,
+    val model: String? = null
 )
 
 data class ClaudeJobStartResponse(
@@ -222,6 +223,15 @@ data class NotificationRegisterRequest(
     val platform: String = "android"
 )
 data class NotificationRegisterResponse(val ok: Boolean, val registered: Int)
+
+// ── Meta-IA ──────────────────────────────────────────────────────────────────
+data class MetaChatRequest(val message: String, val sessionId: String? = null)
+data class MetaChatResponse(
+    val sessionId: String,
+    val reply: String,
+    val executePrompt: String?,
+    val historyLength: Int
+)
 
 // ── Wazuh SIEM ───────────────────────────────────────────────────────────────
 data class WazuhAlert(

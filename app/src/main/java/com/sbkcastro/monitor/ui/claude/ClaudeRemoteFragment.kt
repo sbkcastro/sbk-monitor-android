@@ -79,12 +79,19 @@ class ClaudeRemoteFragment : Fragment() {
 
         // Observe active job for status bar
         viewModel.activeJobId.observe(viewLifecycleOwner) { updateStatusBar() }
+        viewModel.selectedModelIdx.observe(viewLifecycleOwner) { updateStatusBar() }
+
+        // Observe meta mode
+        viewModel.metaMode.observe(viewLifecycleOwner) { updateStatusBar() }
+        viewModel.metaThinking.observe(viewLifecycleOwner) { updateStatusBar() }
 
         // Buttons
         binding.btnNewSession.setOnClickListener { viewModel.newSession() }
         binding.btnApprove.setOnClickListener { viewModel.approve() }
         binding.btnDeny.setOnClickListener { viewModel.deny() }
         binding.btnSend.setOnClickListener { sendMessage() }
+        binding.tvStatusLabel.setOnClickListener { viewModel.toggleMetaMode() }
+        binding.tvStatusSession.setOnClickListener { viewModel.cycleModel() }
         binding.etMessage.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_SEND) { sendMessage(); true } else false
         }
@@ -108,25 +115,42 @@ class ClaudeRemoteFragment : Fragment() {
         binding.tvStatusDot.text = dot
         binding.tvStatusDot.setTextColor(dotColor)
 
-        // Status label
+        // Status label — toca para alternar meta mode
+        val isMeta = viewModel.metaMode.value == true
+        val isMetaThinking = viewModel.metaThinking.value == true
         val label = when {
-            hasPending  -> " claude  awaiting approval"
-            isStreaming -> " claude  streaming..."
-            hasJob      -> " claude  ↑$msgCount msgs"
-            else        -> " claude  idle"
+            isMeta && isMetaThinking -> " 🤖 meta  pensando..."
+            isMeta && hasPending     -> " 🤖 meta → claude  approval"
+            isMeta && isStreaming    -> " 🤖 meta → claude  streaming"
+            isMeta                   -> " 🤖 meta  [toca para desactivar]"
+            hasPending               -> " claude  awaiting approval"
+            isStreaming              -> " claude  streaming..."
+            hasJob                   -> " claude  ↑$msgCount msgs"
+            else                     -> " claude  [toca para meta-IA]"
         }
         binding.tvStatusLabel.text = label
+        binding.tvStatusLabel.setTextColor(
+            if (isMeta) android.graphics.Color.parseColor("#d29922")
+            else android.graphics.Color.parseColor("#58a6ff")
+        )
+        binding.tvStatusLabel.isClickable = true
 
-        // Session ID
+        // Model + session ID (toca para cambiar modelo)
         val jobId = viewModel.activeJobId.value
-        binding.tvStatusSession.text = if (jobId != null) jobId.take(8) else "no session"
+        val modelName = ClaudeRemoteViewModel.MODELS[viewModel.selectedModelIdx.value ?: 0].first
+        binding.tvStatusSession.text = if (jobId != null) "$modelName·${jobId.take(6)}" else "[$modelName]"
+        binding.tvStatusSession.isClickable = true
     }
 
     private fun sendMessage() {
         val text = binding.etMessage.text?.toString()?.trim() ?: return
         if (text.isEmpty()) return
         binding.etMessage.setText("")
-        viewModel.sendMessage(text)
+        if (viewModel.metaMode.value == true) {
+            viewModel.sendMetaMessage(text)
+        } else {
+            viewModel.sendMessage(text)
+        }
     }
 
     private fun confirmDelete(session: ClaudeSession) {
