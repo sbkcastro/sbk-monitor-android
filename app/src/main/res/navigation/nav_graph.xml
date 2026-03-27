@@ -5,34 +5,9 @@
     app:startDestination="@id/chartsProfessionalFragment">
 
     <fragment
-        android:id="@+id/dashboardFragment"
-        android:name="com.sbkcastro.monitor.ui.dashboard.DashboardFragment"
-        android:label="@string/dashboard"/>
-
-    <fragment
-        android:id="@+id/containersFragment"
-        android:name="com.sbkcastro.monitor.ui.containers.ContainersFragment"
-        android:label="@string/containers"/>
-
-    <fragment
-        android:id="@+id/chatFragment"
-        android:name="com.sbkcastro.monitor.ui.chat.ChatFragment"
-        android:label="@string/chat"/>
-
-    <fragment
-        android:id="@+id/settingsFragment"
-        android:name="com.sbkcastro.monitor.ui.settings.SettingsFragment"
-        android:label="@string/settings"/>
-
-    <fragment
         android:id="@+id/chartsProfessionalFragment"
         android:name="com.sbkcastro.monitor.ui.charts.ChartsProfessionalFragment"
         android:label="Gráficos"/>
-
-    <fragment
-        android:id="@+id/servicesFragment"
-        android:name="com.sbkcastro.monitor.ui.services.ServicesFragment"
-        android:label="Servicios"/>
 
     <fragment
         android:id="@+id/lxcManagementFragment"
@@ -40,12 +15,54 @@
         android:label="LXC"/>
 
     <fragment
-        android:id="@+id/idsDashboardFragment"
-        android:name="com.sbkcastro.monitor.ui.ids.IDSDashboardFragment"
-        android:label="IDS"/>
+        android:id="@+id/cryptoFragment"
+        android:name="com.sbkcastro.monitor.ui.crypto.CryptoFragment"
+        android:label="Trade"/>
+
+    <fragment
+        android:id="@+id/securityFragment"
+        android:name="com.sbkcastro.monitor.ui.security.SecurityFragment"
+        android:label="Seguridad"/>
 
     <fragment
         android:id="@+id/claudeRemoteFragment"
         android:name="com.sbkcastro.monitor.ui.claude.ClaudeRemoteFragment"
         android:label="Claude"/>
+
+    <fragment
+        android:id="@+id/chatFragment"
+        android:name="com.sbkcastro.monitor.ui.chat.ChatFragment"
+        android:label="Chat"/>
+
+    <fragment
+        android:id="@+id/servicesFragment"
+        android:name="com.sbkcastro.monitor.ui.services.ServicesFragment"
+        android:label="Servicios"/>
+
+    <fragment
+        android:id="@+id/processesFragment"
+        android:name="com.sbkcastro.monitor.ui.processes.ProcessesFragment"
+        android:label="Procesos"/>
+
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.sbkcastro.monitor.ui.settings.SettingsFragment"
+        android:label="Config"/>
+
+    <!-- Nodos accesibles pero no en tab bar -->
+    <fragment
+        android:id="@+id/dashboardFragment"
+        android:name="com.sbkcastro.monitor.ui.dashboard.DashboardFragment"
+        android:label="Dashboard"/>
+
+    <fragment
+        android:id="@+id/containersFragment"
+        android:name="com.sbkcastro.monitor.ui.containers.ContainersFragment"
+        android:label="Containers"/>
+
+    <fragment
+        android:id="@+id/idsDashboardFragment"
+        android:name="com.sbkcastro.monitor.ui.ids.IDSDashboardFragment"
+        android:label="IDS"/>
+
 </navigation>

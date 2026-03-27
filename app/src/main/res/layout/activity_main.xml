@@ -22,13 +22,21 @@
         app:defaultNavHost="true"
         app:navGraph="@navigation/nav_graph"/>
 
-    <com.google.android.material.bottomnavigation.BottomNavigationView
+    <!-- Scrollable tab bar — sin límite de pestañas -->
+    <com.google.android.material.tabs.TabLayout
         android:id="@+id/bottom_nav"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="52dp"
         android:background="@color/surface_dark"
-        app:itemIconTint="@color/bottom_nav_color"
-        app:itemTextColor="@color/bottom_nav_color"
-        app:menu="@menu/bottom_nav_menu"/>
+        app:tabMode="scrollable"
+        app:tabGravity="start"
+        app:tabTextAppearance="@style/BottomTabText"
+        app:tabSelectedTextColor="#e6edf3"
+        app:tabTextColor="#484f58"
+        app:tabIndicatorColor="#388bfd"
+        app:tabIndicatorHeight="2dp"
+        app:tabPaddingStart="8dp"
+        app:tabPaddingEnd="8dp"
+        app:tabMinWidth="64dp"/>
 
 </LinearLayout>

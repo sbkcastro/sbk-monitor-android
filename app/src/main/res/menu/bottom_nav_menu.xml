@@ -9,6 +9,10 @@
         android:icon="@android:drawable/ic_menu_manage"
         android:title="LXC"/>
     <item
+        android:id="@+id/cryptoFragment"
+        android:icon="@android:drawable/ic_menu_today"
+        android:title="Trade"/>
+    <item
         android:id="@+id/claudeRemoteFragment"
         android:icon="@android:drawable/ic_menu_edit"
         android:title="Claude"/>
@@ -17,7 +21,7 @@
         android:icon="@android:drawable/ic_menu_send"
         android:title="Chat"/>
     <item
-        android:id="@+id/settingsFragment"
-        android:icon="@android:drawable/ic_menu_preferences"
-        android:title="Config"/>
+        android:id="@+id/moreFragment"
+        android:icon="@android:drawable/ic_menu_more"
+        android:title="Más"/>
 </menu>
