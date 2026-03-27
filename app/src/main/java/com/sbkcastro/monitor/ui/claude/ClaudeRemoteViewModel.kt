@@ -44,7 +44,9 @@ class ClaudeRemoteViewModel : ViewModel() {
             try {
                 val resp = ApiClient.getService().claudeJobSessions()
                 _sessions.value = resp.sessions
-            } catch (_: Exception) { }
+            } catch (e: Exception) {
+                android.util.Log.e("ClaudeRemote", "loadSessions failed: ${e.message}", e)
+            }
         }
     }
 
@@ -114,7 +116,13 @@ class ClaudeRemoteViewModel : ViewModel() {
                         }
                     }
                     break // stream ended normally
-                } catch (_: Exception) {
+                } catch (e: Exception) {
+                    android.util.Log.e("ClaudeRemote", "SSE error (retry in ${retryMs}ms): ${e.message}", e)
+                    withContext(Dispatchers.Main) {
+                        if (retryMs >= 8_000L) {
+                            addBubble(ChatBubble("system", "⚠️ Sin conexión SSE (${e.javaClass.simpleName}). Reintentando..."))
+                        }
+                    }
                     delay(retryMs)
                     retryMs = minOf(retryMs * 2, 30_000L)
                 }

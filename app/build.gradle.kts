@@ -11,8 +11,8 @@ android {
         applicationId = "com.sbkcastro.monitor.v2"
         minSdk = 26
         targetSdk = 34
-        versionCode = 25
-        versionName = "2.8.0"
+        versionCode = 33
+        versionName = "3.3.0"
     }
 
     signingConfigs {
@@ -75,4 +75,7 @@ dependencies {
 
     // Charts
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
+
+    // ViewPager2 (Security tabs)
+    implementation("androidx.viewpager2:viewpager2:1.0.0")
 }

@@ -1,6 +1,7 @@
 package com.sbkcastro.monitor.ui.claude
 
 import android.app.AlertDialog
+import android.graphics.Typeface
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -21,11 +22,11 @@ class ClaudeRemoteFragment : Fragment() {
     private val sessionAdapter = SessionAdapter(
         onTap = { session ->
             AlertDialog.Builder(requireContext())
-                .setTitle("Sesión")
-                .setMessage("\"${session.firstMessage}\"\nMensajes: ${session.messageCount} | Estado: ${session.status}")
-                .setPositiveButton("Continuar") { _, _ -> viewModel.resumeSession(session) }
-                .setNegativeButton("Eliminar") { _, _ -> confirmDelete(session) }
-                .setNeutralButton("Cancelar", null)
+                .setTitle("session")
+                .setMessage("\"${session.firstMessage}\"\n\n${session.messageCount} msgs | ${session.status}")
+                .setPositiveButton("resume") { _, _ -> viewModel.resumeSession(session) }
+                .setNegativeButton("delete") { _, _ -> confirmDelete(session) }
+                .setNeutralButton("cancel", null)
                 .show()
         }
     )
@@ -45,21 +46,27 @@ class ClaudeRemoteFragment : Fragment() {
         binding.rvSessions.layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
         binding.rvSessions.adapter = sessionAdapter
 
+        // Observe messages
         viewModel.bubbles.observe(viewLifecycleOwner) { list ->
             bubbleAdapter.submitList(list.toList())
             if (list.isNotEmpty()) binding.rvMessages.scrollToPosition(list.size - 1)
         }
 
+        // Observe sessions
         viewModel.sessions.observe(viewLifecycleOwner) { sessions ->
             sessionAdapter.submitList(sessions.toList())
+            updateStatusBar()
         }
 
+        // Observe streaming
         viewModel.streamingText.observe(viewLifecycleOwner) { partial ->
             bubbleAdapter.setStreamingText(partial)
             val count = (viewModel.bubbles.value?.size ?: 0) + if (partial != null) 1 else 0
             if (count > 0) binding.rvMessages.scrollToPosition(count - 1)
+            updateStatusBar()
         }
 
+        // Observe approval
         viewModel.pendingApproval.observe(viewLifecycleOwner) { ap ->
             if (ap != null) {
                 binding.layoutApproval.visibility = View.VISIBLE
@@ -67,18 +74,52 @@ class ClaudeRemoteFragment : Fragment() {
             } else {
                 binding.layoutApproval.visibility = View.GONE
             }
+            updateStatusBar()
         }
 
+        // Observe active job for status bar
+        viewModel.activeJobId.observe(viewLifecycleOwner) { updateStatusBar() }
+
+        // Buttons
         binding.btnNewSession.setOnClickListener { viewModel.newSession() }
         binding.btnApprove.setOnClickListener { viewModel.approve() }
         binding.btnDeny.setOnClickListener { viewModel.deny() }
-
         binding.btnSend.setOnClickListener { sendMessage() }
         binding.etMessage.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_SEND) { sendMessage(); true } else false
         }
 
         viewModel.loadSessions()
+    }
+
+    private fun updateStatusBar() {
+        val hasJob = viewModel.activeJobId.value != null
+        val isStreaming = viewModel.streamingText.value != null
+        val hasPending = viewModel.pendingApproval.value != null
+        val msgCount = viewModel.bubbles.value?.size ?: 0
+
+        // Status dot
+        val (dot, dotColor) = when {
+            hasPending  -> "◉" to 0xFFf0883e.toInt()   // orange
+            isStreaming -> "●" to 0xFF3fb950.toInt()    // green
+            hasJob      -> "●" to 0xFF58a6ff.toInt()    // cyan
+            else        -> "○" to 0xFF8b949e.toInt()    // dim
+        }
+        binding.tvStatusDot.text = dot
+        binding.tvStatusDot.setTextColor(dotColor)
+
+        // Status label
+        val label = when {
+            hasPending  -> " claude  awaiting approval"
+            isStreaming -> " claude  streaming..."
+            hasJob      -> " claude  ↑$msgCount msgs"
+            else        -> " claude  idle"
+        }
+        binding.tvStatusLabel.text = label
+
+        // Session ID
+        val jobId = viewModel.activeJobId.value
+        binding.tvStatusSession.text = if (jobId != null) jobId.take(8) else "no session"
     }
 
     private fun sendMessage() {
@@ -90,10 +131,10 @@ class ClaudeRemoteFragment : Fragment() {
 
     private fun confirmDelete(session: ClaudeSession) {
         AlertDialog.Builder(requireContext())
-            .setTitle("Eliminar sesión")
-            .setMessage("¿Borrar \"${session.firstMessage}\"?")
-            .setPositiveButton("Borrar") { _, _ -> viewModel.deleteSession(session.jobId) }
-            .setNegativeButton("Cancelar", null)
+            .setTitle("delete session")
+            .setMessage("\"${session.firstMessage.take(40)}\"?")
+            .setPositiveButton("delete") { _, _ -> viewModel.deleteSession(session.jobId) }
+            .setNegativeButton("cancel", null)
             .show()
     }
 

@@ -84,4 +84,59 @@ interface ApiService {
 
     // NOTE: SSE stream handled manually via OkHttp (not Retrofit)
     // URL: "${ApiClient.getBaseUrl()}api/claude/job/{id}/stream"
+
+    // ── Processes ──────────────────────────────────────────────────────────────
+    @GET("api/system/processes")
+    suspend fun getProcesses(): ProcessesResponse
+
+    // ── Wazuh SIEM ─────────────────────────────────────────────────────────────
+    @GET("api/security/wazuh/alerts")
+    suspend fun getWazuhAlerts(@Query("limit") limit: Int = 30): WazuhAlertsResponse
+
+    // ── Firewall ───────────────────────────────────────────────────────────────
+    @GET("api/security/firewall")
+    suspend fun getFirewall(): FirewallResponse
+
+    // ── Verify ────────────────────────────────────────────────────────────────
+    @GET("api/security/verify")
+    suspend fun getVerify(): VerifyResponse
+
+    // ── Sites Status ─────────────────────────────────────────────────────────
+    @GET("api/sites/status")
+    suspend fun getSitesStatus(): SitesStatusResponse
+
+    // ── Notifications ─────────────────────────────────────────────────────────
+    @POST("api/notifications/register")
+    suspend fun registerFcmToken(@Body request: NotificationRegisterRequest): NotificationRegisterResponse
+
+    // ── Crypto Trade ─────────────────────────────────────────────────────────
+    @GET("api/trade/health")
+    suspend fun getTradeHealth(): TradeHealthResponse
+
+    @GET("api/trade/prices")
+    suspend fun getTradePrices(): List<TradePriceItem>
+
+    @GET("api/trade/status")
+    suspend fun getTradeStatus(): TradeStatusResponse
+
+    @GET("api/trade/signals")
+    suspend fun getTradeSignals(): TradeSignalsResponse
+
+    @GET("api/trade/portfolio")
+    suspend fun getTradePortfolio(): TradePortfolioResponse
+
+    @GET("api/trade/trades")
+    suspend fun getTradeTrades(): TradesListResponse
+
+    @GET("api/trade/trades/active")
+    suspend fun getTradeTradesActive(): List<TradeItem>
+
+    @GET("api/trade/risk")
+    suspend fun getTradeRisk(): TradeRiskResponse
+
+    @GET("api/trade/worldmonitor")
+    suspend fun getTradeWorldmonitor(): WorldmonitorAnalysis
+
+    @GET("api/trade/worldmonitor/history")
+    suspend fun getTradeWorldmonitorHistory(@Query("limit") limit: Int = 24): List<WorldmonitorAnalysis>
 }

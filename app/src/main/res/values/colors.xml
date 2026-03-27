@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Base palette (kept for other screens) -->
     <color name="primary">#BB86FC</color>
     <color name="primary_variant">#3700B3</color>
     <color name="secondary">#03DAC5</color>
@@ -13,4 +14,23 @@
     <color name="error">#CF6679</color>
     <color name="green">#4CAF50</color>
     <color name="red">#F44336</color>
+
+    <!-- Terminal palette (Ghostty/LazyGit inspired) -->
+    <color name="term_bg">#0d1117</color>
+    <color name="term_surface">#161b22</color>
+    <color name="term_border">#30363d</color>
+    <color name="term_text">#c9d1d9</color>
+    <color name="term_dim">#8b949e</color>
+    <color name="term_green">#3fb950</color>
+    <color name="term_cyan">#58a6ff</color>
+    <color name="term_yellow">#d29922</color>
+    <color name="term_orange">#f0883e</color>
+    <color name="term_red">#f85149</color>
+    <color name="term_purple">#bc8cff</color>
+    <color name="term_code_bg">#1c2128</color>
+    <color name="term_input_bg">#0d1117</color>
+    <color name="term_status_bg">#1c2128</color>
+    <color name="term_tab_active">#58a6ff</color>
+    <color name="term_tab_border">#30363d</color>
+    <color name="term_approval_bg">#2d1b00</color>
 </resources>

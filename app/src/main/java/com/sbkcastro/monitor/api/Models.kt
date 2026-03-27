@@ -173,3 +173,142 @@ data class ClaudePendingItem(
 data class ClaudeSessionsResponse(val sessions: List<ClaudeSession>)
 data class ClaudePendingResponse(val pending: List<ClaudePendingItem>)
 data class ClaudeActionResponse(val ok: Boolean? = null, val error: String? = null)
+
+// ── Processes ────────────────────────────────────────────────────────────────
+data class ProcessInfo(
+    val user: String,
+    val pid: Int,
+    val cpu: Double,
+    val mem: Double,
+    val vsz: Int,
+    val rss: Int,
+    val stat: String,
+    val command: String
+)
+data class ProcessesResponse(val processes: List<ProcessInfo>, val count: Int, val timestamp: Long)
+
+// ── Firewall ─────────────────────────────────────────────────────────────────
+data class FailBanSshInfo(val bannedCount: Int, val totalFailed: Int, val detail: String)
+data class FailBanInfo(val status: String, val ssh: FailBanSshInfo)
+data class FirewallResponse(
+    val input: String,
+    val forward: String,
+    val nat: String,
+    val fail2ban: FailBanInfo,
+    val timestamp: Long
+)
+
+// ── Verify ───────────────────────────────────────────────────────────────────
+data class SiteVerify(val name: String, val url: String, val status: Int, val up: Boolean)
+data class ServiceVerify(val name: String, val status: String, val active: Boolean)
+data class LxcVerify(val name: String, val state: String)
+data class DiskVerify(val total: String, val used: String, val available: String, val usePercent: String)
+data class VerifyResponse(
+    val sites: List<SiteVerify>,
+    val services: List<ServiceVerify>,
+    val lxc: List<LxcVerify>,
+    val disk: DiskVerify,
+    val timestamp: Long
+)
+
+// ── Sites Status ──────────────────────────────────────────────────────────────
+data class SiteStatus(val name: String, val url: String, val status: String, val httpCode: Int, val latency: Long)
+data class SitesStatusResponse(val total: Int, val online: Int, val sites: List<SiteStatus>)
+
+// ── Notifications ─────────────────────────────────────────────────────────────
+data class NotificationRegisterRequest(
+    val token: String,
+    val deviceId: String,
+    val platform: String = "android"
+)
+data class NotificationRegisterResponse(val ok: Boolean, val registered: Int)
+
+// ── Wazuh SIEM ───────────────────────────────────────────────────────────────
+data class WazuhAlert(
+    val timestamp: String,
+    val level: Int,
+    val rule_id: String,
+    val description: String,
+    val agent: String,
+    val srcip: String?
+)
+data class WazuhAlertsResponse(
+    val alerts: List<WazuhAlert>,
+    val total: Int,
+    val soar_log: List<String>,
+    val timestamp: Long
+)
+
+// ── Crypto Trade ─────────────────────────────────────────────────────────────
+
+data class TradeHealthResponse(val status: String, val mode: String?)
+
+data class TradePriceItem(val symbol: String, val price: Double, val timestamp: Long)
+
+data class TradeStatusResponse(
+    val bot_name: String?,
+    val state: String?,
+    val strategy: String?,
+    val trading_mode: String?,
+    val dry_run: Boolean?
+)
+
+data class TradeSignal(
+    val pair: String?,
+    val profit: Double?,
+    val open_date: String?
+)
+data class TradeSignalsResponse(
+    val bot_state: String?,
+    val strategy: String?,
+    val active_signals: Int?,
+    val trades: List<TradeSignal>?
+)
+
+data class TradePortfolioResponse(
+    val profit: com.google.gson.JsonElement?,
+    val balance: com.google.gson.JsonElement?
+)
+
+data class TradeItem(
+    val pair: String?,
+    val profit_ratio: Double?,
+    val profit_abs: Double?,
+    val open_date: String?,
+    val close_date: String?,
+    val is_open: Boolean?
+)
+data class TradesListResponse(
+    val trades: List<TradeItem>,
+    val trades_count: Int?,
+    val total_trades: Int?
+)
+
+data class TradeRiskResponse(
+    val status: String?,
+    val dailyPnl: Double?,
+    val drawdown: Double?,
+    val balance: Double?,
+    val baselineBalance: Double?,
+    val limits: TradeRiskLimits?,
+    val lastCheck: Long?,
+    val alerts: List<String>?
+)
+data class TradeRiskLimits(
+    val dailyLoss: Double?,
+    val maxDrawdown: Double?,
+    val maxPositionSize: Double?
+)
+
+data class WorldmonitorAnalysis(
+    val id: Int?,
+    val timestamp: Long?,
+    val fear_greed: Int?,
+    val btc_dominance: Double?,
+    val funding_rate: Double?,
+    val sentiment: String?,
+    val confidence: Double?,
+    val recommendation: String?,
+    val summary: String?,
+    val reasoning: String?
+)
