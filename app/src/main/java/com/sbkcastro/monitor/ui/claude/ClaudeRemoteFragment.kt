@@ -66,6 +66,17 @@ class ClaudeRemoteFragment : Fragment() {
             updateStatusBar()
         }
 
+        // Observe pending execute (preview before launching)
+        viewModel.pendingExecute.observe(viewLifecycleOwner) { prompt ->
+            if (prompt != null) {
+                binding.layoutPreview.visibility = View.VISIBLE
+                binding.tvPreviewPrompt.text = prompt
+            } else {
+                binding.layoutPreview.visibility = View.GONE
+            }
+            updateStatusBar()
+        }
+
         // Observe approval
         viewModel.pendingApproval.observe(viewLifecycleOwner) { ap ->
             if (ap != null) {
@@ -87,6 +98,9 @@ class ClaudeRemoteFragment : Fragment() {
 
         // Buttons
         binding.btnNewSession.setOnClickListener { viewModel.newSession() }
+        binding.btnPreviewLaunch.setOnClickListener { viewModel.launchPending() }
+        binding.btnPreviewCancel.setOnClickListener { viewModel.cancelPending() }
+        binding.btnPreviewEdit.setOnClickListener { showEditPromptDialog() }
         binding.btnApprove.setOnClickListener { viewModel.approve() }
         binding.btnDeny.setOnClickListener { viewModel.deny() }
         binding.btnSend.setOnClickListener { sendMessage() }
@@ -151,6 +165,30 @@ class ClaudeRemoteFragment : Fragment() {
         } else {
             viewModel.sendMessage(text)
         }
+    }
+
+    private fun showEditPromptDialog() {
+        val current = viewModel.pendingExecute.value ?: return
+        val et = android.widget.EditText(requireContext()).apply {
+            setText(current)
+            setTextColor(android.graphics.Color.parseColor("#e6edf3"))
+            setBackgroundColor(android.graphics.Color.parseColor("#161b22"))
+            setPadding(24, 16, 24, 16)
+            inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE
+            minLines = 3
+            maxLines = 8
+            typeface = android.graphics.Typeface.MONOSPACE
+            textSize = 11f
+        }
+        AlertDialog.Builder(requireContext())
+            .setTitle("editar prompt")
+            .setView(et)
+            .setPositiveButton("lanzar") { _, _ ->
+                val edited = et.text?.toString()?.trim()
+                if (!edited.isNullOrEmpty()) viewModel.launchPending(edited)
+            }
+            .setNegativeButton("cancelar", null)
+            .show()
     }
 
     private fun confirmDelete(session: ClaudeSession) {

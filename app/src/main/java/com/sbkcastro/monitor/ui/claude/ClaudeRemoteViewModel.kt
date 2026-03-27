@@ -42,6 +42,7 @@ class ClaudeRemoteViewModel : ViewModel() {
     val metaMode = MutableLiveData(false)
     private var metaSessionId: String? = null
     val metaThinking = MutableLiveData(false)
+    val pendingExecute = MutableLiveData<String?>(null)
 
     // ── Model selection ───────────────────────────────────────────────────────
     companion object {
@@ -246,12 +247,24 @@ class ClaudeRemoteViewModel : ViewModel() {
         startSession("continúa desde donde lo dejaste", session.claudeSessionId)
     }
 
+    fun launchPending(editedPrompt: String? = null) {
+        val prompt = editedPrompt ?: pendingExecute.value ?: return
+        pendingExecute.value = null
+        addBubble(ChatBubble("system", "🚀 Ejecutando en Claude CLI..."))
+        startSession(prompt)
+    }
+
+    fun cancelPending() {
+        pendingExecute.value = null
+    }
+
     fun newSession() {
         streamJob?.cancel()
         activeJobId.value = null
         _bubbles.value = emptyList()
         streamingText.value = null
         _pendingApproval.value = null
+        pendingExecute.value = null
         metaSessionId = null
     }
 
@@ -284,10 +297,9 @@ class ClaudeRemoteViewModel : ViewModel() {
                     if (resp.reply.isNotBlank()) {
                         addBubble(ChatBubble("meta", resp.reply))
                     }
-                    // Si meta-IA decidió ejecutar → lanzar Claude CLI
+                    // Si meta-IA decidió ejecutar → mostrar preview para confirmar
                     if (!resp.executePrompt.isNullOrBlank()) {
-                        addBubble(ChatBubble("system", "🚀 Ejecutando en Claude CLI..."))
-                        startSession(resp.executePrompt)
+                        pendingExecute.value = resp.executePrompt
                     }
                 }
             } catch (e: Exception) {

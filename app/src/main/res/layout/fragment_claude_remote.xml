@@ -68,6 +68,80 @@
         android:padding="8dp"
         android:clipToPadding="false"/>
 
+    <!-- Execute preview banner (hidden by default) -->
+    <LinearLayout
+        android:id="@+id/layoutPreview"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="#0d1117"
+        android:padding="10dp"
+        android:visibility="gone">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🚀 prompt → claude"
+                android:textSize="9sp"
+                android:fontFamily="monospace"
+                android:textColor="#484f58"/>
+            <View
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1"/>
+            <TextView
+                android:id="@+id/btnPreviewCancel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="✕"
+                android:textSize="12sp"
+                android:textColor="#484f58"
+                android:padding="4dp"
+                android:clickable="true"
+                android:focusable="true"/>
+        </LinearLayout>
+        <TextView
+            android:id="@+id/tvPreviewPrompt"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="8dp"
+            android:textColor="#e6edf3"
+            android:textSize="11sp"
+            android:fontFamily="monospace"
+            android:maxLines="4"
+            android:ellipsize="end"
+            android:background="#161b22"
+            android:padding="8dp"/>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnPreviewEdit"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="4dp"
+                android:text="Editar"
+                android:textSize="11sp"
+                style="@style/Widget.Material3.Button.OutlinedButton"/>
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnPreviewLaunch"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="2"
+                android:layout_marginStart="4dp"
+                android:text="Lanzar →"
+                android:textSize="11sp"
+                android:backgroundTint="#1a3a1a"/>
+        </LinearLayout>
+    </LinearLayout>
+
     <!-- Approval banner (hidden by default) -->
     <LinearLayout
         android:id="@+id/layoutApproval"
