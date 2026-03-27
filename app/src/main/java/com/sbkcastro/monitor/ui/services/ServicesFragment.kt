@@ -7,9 +7,6 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.sbkcastro.monitor.R
 import com.sbkcastro.monitor.databinding.FragmentServicesBinding
 
 class ServicesFragment : Fragment() {
@@ -28,35 +25,30 @@ class ServicesFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        setupRecyclerView()
-        observeData()
-
-        // Botón de actualizar
-        binding.fabRefresh.setOnClickListener {
-            viewModel.checkAllServices()
-        }
-
-        // Fetch inicial
-        viewModel.checkAllServices()
-    }
-
-    private fun setupRecyclerView() {
         adapter = ServicesAdapter()
         binding.recyclerServices.apply {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = this@ServicesFragment.adapter
         }
-    }
 
-    private fun observeData() {
-        viewModel.services.observe(viewLifecycleOwner) { services ->
-            adapter.submitList(services)
-            binding.progressBar.visibility = View.GONE
+        viewModel.telemetry.observe(viewLifecycleOwner) { data ->
+            if (data != null) {
+                binding.tvSummary.text =
+                    "online: ${data.online}/${data.total}  |  activos: ${data.totalActive}  |  views 24h: ${data.totalPageviews24h}"
+                adapter.submitList(data.sites)
+            }
         }
 
-        viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
-            binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+        viewModel.isLoading.observe(viewLifecycleOwner) { loading ->
+            binding.progressBar.visibility = if (loading) View.VISIBLE else View.GONE
         }
+
+        viewModel.error.observe(viewLifecycleOwner) { err ->
+            if (err != null) binding.tvSummary.text = "error: $err"
+        }
+
+        binding.fabRefresh.setOnClickListener { viewModel.load() }
+        viewModel.load()
     }
 
     override fun onDestroyView() {

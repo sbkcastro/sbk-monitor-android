@@ -112,6 +112,9 @@ interface ApiService {
     @GET("api/sites/status")
     suspend fun getSitesStatus(): SitesStatusResponse
 
+    @GET("api/sites/telemetry")
+    suspend fun getSitesTelemetry(): SitesTelemetryResponse
+
     // ── Notifications ─────────────────────────────────────────────────────────
     @POST("api/notifications/register")
     suspend fun registerFcmToken(@Body request: NotificationRegisterRequest): NotificationRegisterResponse

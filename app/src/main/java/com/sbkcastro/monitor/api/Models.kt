@@ -216,6 +216,26 @@ data class VerifyResponse(
 data class SiteStatus(val name: String, val url: String, val status: String, val httpCode: Int, val latency: Long)
 data class SitesStatusResponse(val total: Int, val online: Int, val sites: List<SiteStatus>)
 
+// ── Sites Telemetry (uptime + Umami analytics) ────────────────────────────────
+data class SiteAnalytics(
+    val activeNow: Int,
+    val pageviews: Int,
+    val visitors: Int,
+    val visits: Int,
+    val bounceRate: Int?,
+    val avgTime: Int?
+)
+data class SiteTelemetry(
+    val name: String, val url: String,
+    val status: String, val httpCode: Int, val latency: Long,
+    val analytics: SiteAnalytics?
+)
+data class SitesTelemetryResponse(
+    val total: Int, val online: Int,
+    val totalActive: Int, val totalPageviews24h: Int,
+    val sites: List<SiteTelemetry>
+)
+
 // ── Notifications ─────────────────────────────────────────────────────────────
 data class NotificationRegisterRequest(
     val token: String,
