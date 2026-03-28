@@ -58,9 +58,11 @@ class ServerWidgetProvider : AppWidgetProvider() {
                     val ram = String.format("%.1f", lastMetric.getDouble("ram"))
                     val disk = String.format("%.1f", lastMetric.getDouble("disk"))
 
+                    val totalActive = prefs.getInt("total_active", -1)
                     views.setTextViewText(R.id.widgetCpu, "⚡ CPU: $cpu%")
                     views.setTextViewText(R.id.widgetRam, "🧠 RAM: $ram%")
                     views.setTextViewText(R.id.widgetDisk, "💾 Disco: $disk%")
+                    views.setTextViewText(R.id.widgetActive, if (totalActive >= 0) "👁 activos: $totalActive" else "👁 activos: --")
                     views.setTextViewText(R.id.widgetStatus, "✅ Actualizado")
                 } else {
                     setDefaultValues(views)
@@ -96,6 +98,7 @@ class ServerWidgetProvider : AppWidgetProvider() {
         views.setTextViewText(R.id.widgetCpu, "⚡ CPU: --%")
         views.setTextViewText(R.id.widgetRam, "🧠 RAM: --%")
         views.setTextViewText(R.id.widgetDisk, "💾 Disco: --%")
+        views.setTextViewText(R.id.widgetActive, "👁 activos: --")
         views.setTextViewText(R.id.widgetStatus, "Iniciando...")
     }
 

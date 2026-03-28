@@ -115,6 +115,12 @@ interface ApiService {
     @GET("api/sites/telemetry")
     suspend fun getSitesTelemetry(): SitesTelemetryResponse
 
+    @GET("api/sites/history")
+    suspend fun getSitesHistory(
+        @Query("site") site: String = "sbkcastro",
+        @Query("days") days: Int = 7
+    ): UmamiHistoryResponse
+
     // ── Notifications ─────────────────────────────────────────────────────────
     @POST("api/notifications/register")
     suspend fun registerFcmToken(@Body request: NotificationRegisterRequest): NotificationRegisterResponse

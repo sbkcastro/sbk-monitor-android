@@ -43,6 +43,10 @@ class ClaudeRemoteViewModel : ViewModel() {
     private var metaSessionId: String? = null
     val metaThinking = MutableLiveData(false)
     val pendingExecute = MutableLiveData<String?>(null)
+    private var _agentMode = false
+    private var _agentIteration = 0
+    private val _agentStatus = MutableLiveData<String?>(null)
+    val agentStatus: LiveData<String?> = _agentStatus
 
     // ── Model selection ───────────────────────────────────────────────────────
     companion object {
@@ -190,9 +194,13 @@ class ClaudeRemoteViewModel : ViewModel() {
                 }
                 "done" -> {
                     withContext(Dispatchers.Main) {
+                        val jobResult = streamingText.value ?: ""
                         flushStreaming()
                         _pendingApproval.value = null
                         loadSessions()
+                        if (_agentMode && jobResult.isNotBlank()) {
+                            continueAgentLoop(jobResult)
+                        }
                     }
                 }
                 "error" -> {
@@ -247,6 +255,46 @@ class ClaudeRemoteViewModel : ViewModel() {
         startSession("continúa desde donde lo dejaste", session.claudeSessionId)
     }
 
+    fun continueAgentLoop(jobResult: String) {
+        if (!_agentMode || _agentIteration >= 5) {
+            _agentMode = false
+            _agentIteration = 0
+            _agentStatus.value = null
+            return
+        }
+        _agentIteration++
+        _agentStatus.value = "🔄 Agente paso ${_agentIteration}/5..."
+        metaThinking.value = true
+        viewModelScope.launch {
+            try {
+                val resp = ApiClient.getService().metaChat(
+                    MetaChatRequest(message = jobResult, sessionId = metaSessionId, continueAgent = true)
+                )
+                metaSessionId = resp.sessionId
+                withContext(Dispatchers.Main) {
+                    metaThinking.value = false
+                    if (resp.reply.isNotBlank()) addBubble(ChatBubble("meta", resp.reply))
+                    if (!resp.executePrompt.isNullOrBlank() && _agentIteration < 5) {
+                        addBubble(ChatBubble("system", "🤖 Paso ${_agentIteration}: ejecutando..."))
+                        startSession(resp.executePrompt)
+                    } else {
+                        _agentMode = false
+                        _agentIteration = 0
+                        _agentStatus.value = null
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    metaThinking.value = false
+                    _agentMode = false
+                    _agentIteration = 0
+                    _agentStatus.value = null
+                    addBubble(ChatBubble("system", "❌ Error agente: ${e.message}"))
+                }
+            }
+        }
+    }
+
     fun launchPending(editedPrompt: String? = null) {
         val prompt = editedPrompt ?: pendingExecute.value ?: return
         pendingExecute.value = null
@@ -265,6 +313,9 @@ class ClaudeRemoteViewModel : ViewModel() {
         streamingText.value = null
         _pendingApproval.value = null
         pendingExecute.value = null
+        _agentMode = false
+        _agentIteration = 0
+        _agentStatus.value = null
         metaSessionId = null
     }
 
@@ -299,6 +350,8 @@ class ClaudeRemoteViewModel : ViewModel() {
                     }
                     // Si meta-IA decidió ejecutar → mostrar preview para confirmar
                     if (!resp.executePrompt.isNullOrBlank()) {
+                        _agentMode = true
+                        _agentIteration = 0
                         pendingExecute.value = resp.executePrompt
                     }
                 }

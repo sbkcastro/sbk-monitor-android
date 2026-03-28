@@ -236,6 +236,15 @@ data class SitesTelemetryResponse(
     val sites: List<SiteTelemetry>
 )
 
+// ── Umami History ─────────────────────────────────────────────────────────────
+data class UmamiDayPoint(val date: String, val count: Int)
+data class UmamiHistoryResponse(
+    val site: String,
+    val days: Int,
+    val pageviews: List<UmamiDayPoint>,
+    val sessions: List<UmamiDayPoint>
+)
+
 // ── Notifications ─────────────────────────────────────────────────────────────
 data class NotificationRegisterRequest(
     val token: String,
@@ -245,12 +254,17 @@ data class NotificationRegisterRequest(
 data class NotificationRegisterResponse(val ok: Boolean, val registered: Int)
 
 // ── Meta-IA ──────────────────────────────────────────────────────────────────
-data class MetaChatRequest(val message: String, val sessionId: String? = null)
+data class MetaChatRequest(
+    val message: String,
+    val sessionId: String? = null,
+    val continueAgent: Boolean = false
+)
 data class MetaChatResponse(
     val sessionId: String,
     val reply: String,
     val executePrompt: String?,
-    val historyLength: Int
+    val historyLength: Int,
+    val agentMode: Boolean = false
 )
 
 // ── Wazuh SIEM ───────────────────────────────────────────────────────────────

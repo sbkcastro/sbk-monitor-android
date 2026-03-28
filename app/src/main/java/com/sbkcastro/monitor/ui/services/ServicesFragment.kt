@@ -39,6 +39,10 @@ class ServicesFragment : Fragment() {
             }
         }
 
+        viewModel.history.observe(viewLifecycleOwner) { data ->
+            if (data != null) binding.umamiChart.setData(data.pageviews)
+        }
+
         viewModel.isLoading.observe(viewLifecycleOwner) { loading ->
             binding.progressBar.visibility = if (loading) View.VISIBLE else View.GONE
         }

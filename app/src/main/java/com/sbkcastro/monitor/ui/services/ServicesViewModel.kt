@@ -6,12 +6,17 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sbkcastro.monitor.api.ApiClient
 import com.sbkcastro.monitor.api.SitesTelemetryResponse
+import com.sbkcastro.monitor.api.UmamiHistoryResponse
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 
 class ServicesViewModel : ViewModel() {
 
     private val _telemetry = MutableLiveData<SitesTelemetryResponse?>()
     val telemetry: LiveData<SitesTelemetryResponse?> = _telemetry
+
+    private val _history = MutableLiveData<UmamiHistoryResponse?>()
+    val history: LiveData<UmamiHistoryResponse?> = _history
 
     private val _isLoading = MutableLiveData(false)
     val isLoading: LiveData<Boolean> = _isLoading
@@ -24,7 +29,10 @@ class ServicesViewModel : ViewModel() {
         _error.value = null
         viewModelScope.launch {
             try {
-                _telemetry.value = ApiClient.getService().getSitesTelemetry()
+                val telemetryDeferred = async { ApiClient.getService().getSitesTelemetry() }
+                val historyDeferred = async { ApiClient.getService().getSitesHistory() }
+                _telemetry.value = telemetryDeferred.await()
+                _history.value = historyDeferred.await()
             } catch (e: Exception) {
                 _error.value = e.message
             } finally {

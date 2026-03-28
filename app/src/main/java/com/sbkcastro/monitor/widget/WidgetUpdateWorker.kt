@@ -58,6 +58,12 @@ class WidgetUpdateWorker(
 
             chartsPrefs.edit().putString("metrics_data", json.toString()).apply()
 
+            // Fetch active visitors from Umami telemetry
+            try {
+                val telemetry = ApiClient.getService().getSitesTelemetry()
+                chartsPrefs.edit().putInt("total_active", telemetry.totalActive).apply()
+            } catch (_: Exception) { }
+
             val appWidgetManager = AppWidgetManager.getInstance(context)
             val widgetIds = appWidgetManager.getAppWidgetIds(
                 ComponentName(context, ServerWidgetProvider::class.java)

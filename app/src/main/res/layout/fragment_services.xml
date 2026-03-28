@@ -32,6 +32,12 @@
             android:indeterminateTint="#388bfd"
             android:visibility="gone"/>
 
+        <com.sbkcastro.monitor.ui.services.UmamiBarChartView
+            android:id="@+id/umamiChart"
+            android:layout_width="match_parent"
+            android:layout_height="160dp"
+            android:background="#0d1117"/>
+
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerServices"
             android:layout_width="match_parent"
