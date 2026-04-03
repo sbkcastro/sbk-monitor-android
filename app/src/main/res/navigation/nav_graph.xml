@@ -49,6 +49,11 @@
         android:name="com.sbkcastro.monitor.ui.settings.SettingsFragment"
         android:label="Config"/>
 
+    <fragment
+        android:id="@+id/chessFragment"
+        android:name="com.sbkcastro.monitor.ui.chess.ChessFragment"
+        android:label="Chess"/>
+
     <!-- Nodos accesibles pero no en tab bar -->
     <fragment
         android:id="@+id/dashboardFragment"

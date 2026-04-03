@@ -24,7 +24,8 @@ class MainActivity : AppCompatActivity() {
         Tab("💬", "Chat",      R.id.chatFragment),
         Tab("⚙️", "Servicios", R.id.servicesFragment),
         Tab("🔧", "Procesos",  R.id.processesFragment),
-        Tab("⚙", "Config",    R.id.settingsFragment)
+        Tab("⚙", "Config",    R.id.settingsFragment),
+        Tab("♟", "Chess",     R.id.chessFragment)
     )
 
     private data class Tab(val icon: String, val label: String, val destId: Int)
